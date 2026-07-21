@@ -281,7 +281,7 @@ const FreelancerFeed = () => {
                               : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100'
                           }`}
                         >
-                          <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">{job.title}</h4>
+                          <h4 className="font-semibold text-gray-700 mb-2 line-clamp-2">{job.title}</h4>
                           <p className="text-sm text-gray-600 mb-1">{job.budgetRange}</p>
                           <p className="text-xs text-gray-500 mb-3">{job.projectType}</p>
                           <button

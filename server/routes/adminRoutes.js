@@ -423,4 +423,63 @@ router.delete('/jobs/:jobId', adminOnly, async (req, res) => {
   }
 });
 
+// ── Reviews ───────────────────────────────────────────────────────────────────
+router.get('/reviews', adminOnly, async (req, res) => {
+  try {
+    const snap = await db.collection('reviews').limit(200).get();
+
+    if (snap.empty) {
+      return res.json({ success: true, reviews: [] });
+    }
+
+    // Collect all unique user IDs needed (reviewers + freelancers)
+    const userIds = new Set();
+    snap.docs.forEach(d => {
+      const data = d.data();
+      if (data.reviewerId) userIds.add(data.reviewerId);
+      if (data.freelancerId) userIds.add(data.freelancerId);
+    });
+
+    // Fetch all users in parallel (one read per unique user)
+    const userMap = {};
+    await Promise.all([...userIds].map(async (uid) => {
+      try {
+        const doc = await db.collection('users').doc(uid).get();
+        userMap[uid] = doc.exists
+          ? { fullName: doc.data().fullName || 'Unknown', profileImage: doc.data().profileImage || null }
+          : { fullName: 'Deleted User', profileImage: null };
+      } catch {
+        userMap[uid] = { fullName: 'Unknown', profileImage: null };
+      }
+    }));
+
+    const reviews = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        reviewer: userMap[data.reviewerId] || { fullName: 'Unknown', profileImage: null },
+        freelancer: userMap[data.freelancerId] || { fullName: 'Unknown', profileImage: null },
+      };
+    });
+
+    reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json({ success: true, reviews });
+  } catch (err) {
+    console.error('Admin reviews error:', err);
+    res.status(500).json({ message: 'Failed to fetch reviews', detail: err.message });
+  }
+});
+
+router.delete('/reviews/:reviewId', adminOnly, async (req, res) => {
+  try {
+    const doc = await db.collection('reviews').doc(req.params.reviewId).get();
+    if (!doc.exists) return res.status(404).json({ message: 'Review not found' });
+    await db.collection('reviews').doc(req.params.reviewId).delete();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete review' });
+  }
+});
+
 export default router;

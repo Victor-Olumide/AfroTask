@@ -11,6 +11,7 @@ import {
   sendPasswordResetEmail,
   signOut,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult
@@ -31,6 +32,7 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+export const appleProvider = new OAuthProvider('apple.com');
 
 // Connect to emulators ONLY when explicitly enabled via VITE_USE_EMULATOR=true
 // Run: firebase emulators:start  before enabling this

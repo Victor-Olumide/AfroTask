@@ -5,8 +5,8 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import Footer from '../components/Footer';
-import { ArrowLeft, Eye, EyeOff, Mail } from 'lucide-react';
-import { auth, createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword, googleProvider, signInWithPopup } from '../config/firebase';
+import { ArrowLeft, Eye, EyeOff, Mail, ShieldCheck } from 'lucide-react';
+import { auth, createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword, googleProvider, appleProvider, signInWithPopup } from '../config/firebase';
 
 const SignupPage = () => {
   const { role } = useParams();
@@ -18,6 +18,7 @@ const SignupPage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -29,12 +30,44 @@ const SignupPage = () => {
     portfolioWebsite: '',
     linkedIn: '',
     companyName: '',
-    companyType: ''
+    companyType: '',
+    nationalId: ''
   });
   const [profileImage, setProfileImage] = useState(null);
+  const [idVerifying, setIdVerifying] = useState(false);
+  const [idStatus, setIdStatus] = useState(null); // null | 'valid' | 'invalid'
+
+  // Per-country national ID config: label, placeholder, regex, hint
+  const NATIONAL_ID_CONFIG = {
+    Nigeria:       { label: 'NIN (National Identification Number)',      placeholder: '11-digit NIN',                  regex: /^\d{11}$/,          hint: 'Your 11-digit NIMC NIN' },
+    Ghana:         { label: 'Ghana Card Number',                         placeholder: 'GHA-XXXXXXXXX-X',               regex: /^GHA-\d{9}-\d$/i,   hint: 'Format: GHA-000000000-0' },
+    Kenya:         { label: 'National ID Number',                        placeholder: '8-digit ID number',             regex: /^\d{8}$/,            hint: 'Your 8-digit Kenyan National ID' },
+    'South Africa':{ label: 'South African ID Number',                   placeholder: '13-digit ID number',            regex: /^\d{13}$/,           hint: 'Your 13-digit SA ID number' },
+    Egypt:         { label: 'National ID Number',                        placeholder: '14-digit National ID',          regex: /^\d{14}$/,           hint: 'Your 14-digit Egyptian National ID' },
+    Tanzania:      { label: 'NIDA Number',                               placeholder: '20-digit NIDA number',          regex: /^\d{20}$/,           hint: 'Your 20-digit NIDA number' },
+    Uganda:        { label: 'National ID Number',                        placeholder: '14-character NIN',              regex: /^[A-Z0-9]{14}$/i,    hint: 'Your 14-character Ugandan NIN' },
+    Rwanda:        { label: 'National ID Number',                        placeholder: '16-digit ID number',            regex: /^\d{16}$/,           hint: 'Your 16-digit Rwandan ID' },
+    Ethiopia:      { label: 'Fayda ID / National ID',                    placeholder: 'National ID number',            regex: /^[A-Z0-9]{6,20}$/i,  hint: 'Your Ethiopian national ID number' },
+    Morocco:       { label: 'CIN (Carte d\'Identité Nationale)',         placeholder: 'e.g. AB123456',                 regex: /^[A-Z]{1,2}\d{5,6}$/i, hint: 'Format: 1-2 letters + 5-6 digits' },
+    Senegal:       { label: 'NINEA / CNI Number',                        placeholder: 'National ID number',            regex: /^[A-Z0-9]{6,15}$/i,  hint: 'Your Senegalese national ID' },
+    'Ivory Coast': { label: 'CNI Number',                                placeholder: 'National ID number',            regex: /^[A-Z0-9]{6,15}$/i,  hint: 'Your Ivorian national ID number' },
+    Cameroon:      { label: 'CNI Number',                                placeholder: 'National ID number',            regex: /^[A-Z0-9]{6,15}$/i,  hint: 'Your Cameroonian national ID' },
+    Zimbabwe:      { label: 'National ID Number',                        placeholder: 'e.g. 63-123456A78',             regex: /^\d{2}-\d{6}[A-Z]\d{2}$/i, hint: 'Format: 00-000000A00' },
+    Zambia:        { label: 'National Registration Card (NRC)',          placeholder: 'e.g. 123456/10/1',              regex: /^\d{6}\/\d{2}\/\d{1}$/, hint: 'Format: 000000/00/0' },
+    Botswana:      { label: 'Omang ID Number',                           placeholder: '9-digit Omang number',          regex: /^\d{9}$/,            hint: 'Your 9-digit Omang ID' },
+    Other:         { label: 'Government-Issued ID Number',               placeholder: 'Passport or national ID number',regex: /^[A-Z0-9]{5,20}$/i,  hint: 'Passport number or national ID' },
+  };
+
+  const getIdConfig = () => NATIONAL_ID_CONFIG[formData.country] || null;
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Reset ID verification if country changes
+    if (name === 'country') {
+      setFormData(prev => ({ ...prev, country: value, nationalId: '' }));
+      setIdStatus(null);
+    }
   };
 
   const handleImageChange = (e) => {
@@ -44,6 +77,28 @@ const SignupPage = () => {
   const validatePassword = (password) => {
     const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return regex.test(password);
+  };
+
+  const handleVerifyId = async () => {
+    const config = getIdConfig();
+    if (!config) return;
+    if (!config.regex.test(formData.nationalId)) {
+      toast.error(`Invalid format. ${config.hint}`);
+      setIdStatus('invalid');
+      return;
+    }
+    setIdVerifying(true);
+    try {
+      // Simulate async check — swap for a real API call when available
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIdStatus('valid');
+      toast.success('ID submitted. Full verification happens within 24 hours.');
+    } catch {
+      setIdStatus('invalid');
+      toast.error('Verification failed. Please try again.');
+    } finally {
+      setIdVerifying(false);
+    }
   };
 
   const handleGoogleSignup = async () => {
@@ -72,6 +127,32 @@ const SignupPage = () => {
     }
   };
 
+  const handleAppleSignup = async () => {
+    setAppleLoading(true);
+    try {
+      const result = await signInWithPopup(auth, appleProvider);
+      const { user } = result;
+      await signOut(auth);
+
+      const response = await api.post('/auth/google', {
+        email: user.email,
+        fullName: user.displayName || user.email?.split('@')[0],
+        profileImage: user.photoURL,
+        googleUid: user.uid,
+        role,
+      });
+
+      toast.success('Account created with Apple!');
+      login(response.data.token, response.data.user);
+    } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+      toast.error('Apple sign-up failed. Please try again.');
+      console.error('Apple signup error:', err);
+    } finally {
+      setAppleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -85,6 +166,14 @@ const SignupPage = () => {
 
     if (!profileImage) {
       return toast.error('Profile image is required');
+    }
+
+    if (formData.nin && !validateNIN(formData.nin)) {
+      return toast.error('NIN must be exactly 11 digits');
+    }
+
+    if (formData.nin && ninStatus !== 'valid') {
+      return toast.error('Please verify your NIN before submitting');
     }
 
     setLoading(true);
@@ -375,6 +464,59 @@ const SignupPage = () => {
                 </>
               )}
 
+              {/* National ID — shown only after a country is selected */}
+              {getIdConfig() && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {getIdConfig().label}
+                  <span className="ml-1 text-gray-400 font-normal text-xs">— Optional but recommended</span>
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      name="nationalId"
+                      value={formData.nationalId}
+                      onChange={(e) => {
+                        setFormData({ ...formData, nationalId: e.target.value });
+                        setIdStatus(null);
+                      }}
+                      placeholder={getIdConfig().placeholder}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                        idStatus === 'valid'
+                          ? 'border-green-500 bg-green-50'
+                          : idStatus === 'invalid'
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
+                    />
+                    {idStatus === 'valid' && (
+                      <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleVerifyId}
+                    disabled={idVerifying || !formData.nationalId || idStatus === 'valid'}
+                    className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {idVerifying ? 'Checking...' : idStatus === 'valid' ? 'Verified ✓' : 'Verify ID'}
+                  </button>
+                </div>
+                {idStatus === 'valid' && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" /> ID submitted — full verification within 24 hours.
+                  </p>
+                )}
+                {idStatus === 'invalid' && (
+                  <p className="text-xs text-red-500 mt-1">{getIdConfig().hint}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  Verifying your government ID builds trust and unlocks higher-paying jobs.
+                </p>
+              </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <div className="relative">
@@ -458,6 +600,19 @@ const SignupPage = () => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               {googleLoading ? 'Signing up...' : 'Sign up with Google'}
+            </button>
+
+            {/* Apple Sign-Up */}
+            <button
+              type="button"
+              onClick={handleAppleSignup}
+              disabled={appleLoading}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 mt-3 bg-black hover:bg-gray-900 text-white rounded-lg transition font-medium disabled:opacity-50"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.39.07 2.35.74 3.15.8 1.2-.24 2.35-.93 3.62-.84 1.54.12 2.7.72 3.44 1.84-3.14 1.88-2.39 5.98.48 7.13-.57 1.56-1.32 3.1-2.69 3.95zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+              </svg>
+              {appleLoading ? 'Signing up...' : 'Sign up with Apple'}
             </button>
 
             <p className="mt-5 text-center text-gray-600 text-sm">

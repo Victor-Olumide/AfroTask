@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Briefcase, FileText, BarChart2, LogOut,
-  MessageSquare, User, ChevronRight, Megaphone, Menu, X,
+  MessageSquare, User, ChevronRight, Megaphone, Menu, X, Star,
 } from 'lucide-react';
 import { FaPager } from "react-icons/fa";
 import { AnimatePresence, motion } from 'framer-motion';
@@ -13,6 +13,7 @@ const TABS = [
   { id: 'users', label: 'Users', icon: Users },
   { id: 'jobs', label: 'Jobs', icon: Briefcase },
   { id: 'posts', label: 'Posts', icon: FaPager },
+  { id: 'reviews', label: 'Reviews', icon: Star },
   { id: 'chats', label: 'Chats', icon: MessageSquare },
   { id: 'profile', label: 'My Profile', icon: User },
 ];

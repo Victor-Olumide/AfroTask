@@ -5,7 +5,7 @@ import {
   Pencil, X, Upload, Eye, Search, Shield, TrendingUp, Activity,
   ChevronRight, MessageSquare, Flag, Send, User, CheckCircle,
   AlertTriangle, Megaphone, Image as ImageIcon, ThumbsUp,
-  Lock, Mail, Save, Loader2, EyeOff,
+  Lock, Mail, Save, Loader2, EyeOff, Star,
 } from 'lucide-react';
 import { FaPager } from "react-icons/fa";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -341,311 +341,7 @@ function BroadcastModal({ onClose, prefillUserId = null, prefillUserName = null 
   );
 }
 
-// ── AdminProfileTab ───────────────────────────────────────────────────────────
-function AdminProfileTab({ user: adminUser }) {
-  const [profile, setProfile] = useState({
-    fullName: adminUser?.fullName || '',
-    email: adminUser?.email || '',
-  });
 
-  const [passwords, setPasswords] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-
-  const [showPasswords, setShowPasswords] = useState({
-    currentPassword: false,
-    newPassword: false,
-    confirmPassword: false,
-  });
-
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPw, setSavingPw] = useState(false);
-
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    setSavingProfile(true);
-
-    try {
-      const res = await api.put('/admin/profile', profile);
-      const stored = JSON.parse(localStorage.getItem('adminUser') || '{}');
-      const updated = { ...stored, ...res.data.user };
-
-      localStorage.setItem('adminUser', JSON.stringify(updated));
-      toast.success('Profile updated!');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-
-    if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
-      toast.error('All password fields are required');
-      return;
-    }
-
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (passwords.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return;
-    }
-
-    setSavingPw(true);
-
-    try {
-      await api.put('/admin/profile/password', {
-        currentPassword: passwords.currentPassword,
-        newPassword: passwords.newPassword,
-      });
-
-      toast.success('Password updated!');
-      setPasswords({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update password');
-    } finally {
-      setSavingPw(false);
-    }
-  };
-
-  const togglePasswordVisibility = (field) => {
-    setShowPasswords((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-  };
-
-  const inputCls =
-    'w-full pl-11 pr-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#00564C] focus:ring-1 focus:ring-[#00564C]/40 text-sm transition';
-
-  const passwordCls =
-    'w-full pl-11 pr-11 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#00564C] focus:ring-1 focus:ring-[#00564C]/40 text-sm transition';
-
-  return (
-    <div className="space-y-6">
-      {/* top intro */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-r from-[#062a25] via-[#07352f] to-[#0a433c] p-6">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
-        <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00564C] to-emerald-400 text-2xl font-bold text-white shadow-lg shadow-[#00564C]/30">
-              {profile.fullName?.[0] || 'A'}
-            </div>
-
-            <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
-                <Shield className="w-3.5 h-3.5" />
-                Administrator
-              </div>
-              <h2 className="text-2xl font-bold text-white">
-                {profile.fullName || 'Admin User'}
-              </h2>
-              <p className="text-sm text-gray-400 mt-1">{profile.email}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:w-auto">
-            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3">
-              <p className="text-[11px] uppercase tracking-wider text-gray-500">Access</p>
-              <p className="mt-1 text-sm font-semibold text-white">Full Admin</p>
-            </div>
-            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3">
-              <p className="text-[11px] uppercase tracking-wider text-gray-500">Role</p>
-              <p className="mt-1 text-sm font-semibold text-emerald-400">Administrator</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* content */}
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        {/* profile form */}
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <h3 className="text-white font-semibold text-lg">Profile Information</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Update the identity details tied to this admin account.
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-              <User className="w-5 h-5 text-gray-400" />
-            </div>
-          </div>
-
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  value={profile.fullName}
-                  onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                  placeholder="Admin name"
-                  className={inputCls}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                  placeholder="admin@afrotask.com"
-                  className={inputCls}
-                />
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-end">
-              <button
-                type="submit"
-                disabled={savingProfile}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#00564C] hover:bg-[#006b5e] text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
-              >
-                {savingProfile ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                {savingProfile ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* security + account info */}
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-white font-semibold text-lg">Security</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Change your password to keep admin access protected.
-                </p>
-              </div>
-              <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                <Lock className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
-
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              {[
-                {
-                  label: 'Current Password',
-                  key: 'currentPassword',
-                  placeholder: 'Enter current password',
-                },
-                {
-                  label: 'New Password',
-                  key: 'newPassword',
-                  placeholder: 'Enter new password',
-                },
-                {
-                  label: 'Confirm New Password',
-                  key: 'confirmPassword',
-                  placeholder: 'Confirm new password',
-                },
-              ].map(({ label, key, placeholder }) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                    {label}
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <input
-                      type={showPasswords[key] ? 'text' : 'password'}
-                      value={passwords[key]}
-                      onChange={(e) =>
-                        setPasswords({ ...passwords, [key]: e.target.value })
-                      }
-                      placeholder={placeholder}
-                      className={passwordCls}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility(key)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition"
-                    >
-                      {showPasswords[key] ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={savingPw}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
-                >
-                  {savingPw ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Lock className="w-4 h-4" />
-                  )}
-                  {savingPw ? 'Updating...' : 'Update Password'}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-            <h3 className="text-white font-semibold text-lg">Account Status</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Summary of the current admin account context.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wider text-gray-600">Role</p>
-                <p className="mt-1 text-sm font-medium text-white">Administrator</p>
-              </div>
-
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wider text-gray-600">Email</p>
-                <p className="mt-1 text-sm font-medium text-white break-all">
-                  {profile.email || 'No email set'}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wider text-gray-600">Privileges</p>
-                <p className="mt-1 text-sm font-medium text-emerald-400">
-                  Full platform management access
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 // ── PostsTab ──────────────────────────────────────────────────────────────────
 function PostsTab() {
   const [subTab, setSubTab] = useState('posts');
@@ -716,11 +412,11 @@ function PostsTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5 ">
         <div className="flex gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.06]">
           {[{ id: 'posts', label: 'All Posts', icon: FaPager }, { id: 'reports', label: 'Reports', icon: Flag }].map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => { setSubTab(id); setSearch(''); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${subTab === id ? 'bg-[#00564C] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+              className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition ${subTab === id ? 'bg-[#00564C] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
               <Icon className="w-3.5 h-3.5" />
               {label}
               {id === 'reports' && pendingReports > 0 && (
@@ -731,7 +427,7 @@ function PostsTab() {
         </div>
         {subTab === 'posts' && (
           <button onClick={() => setCreatePostOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00564C] hover:bg-[#006b5e] text-white rounded-xl text-sm font-medium transition">
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#00564C] hover:bg-[#006b5e] text-white rounded-xl text-sm font-medium transition sm:ml-auto">
             <Plus className="w-4 h-4" /> Create Post
           </button>
         )}
@@ -750,7 +446,7 @@ function PostsTab() {
       ) : subTab === 'posts' ? (
         filteredPosts.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center md:mx-auto mb-4">
               <MessageSquare className="w-7 h-7 text-gray-600" />
             </div>
             <p className="text-gray-500 text-sm">No posts found</p>
@@ -791,12 +487,16 @@ function PostsTab() {
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${report.status === 'resolved' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
-                        {report.status === 'resolved' ? 'Resolved' : 'Pending'}
-                      </span>
-                      <span className="text-gray-500 text-xs capitalize">{report.type || 'post'} report</span>
-                      {report.createdAt && <span className="text-gray-600 text-xs ml-auto">{new Date(report.createdAt).toLocaleDateString()}</span>}
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${report.status === 'resolved' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+                          {report.status === 'resolved' ? 'Resolved' : 'Pending'}
+                        </span>
+                        <span className="text-gray-500 text-xs capitalize">{report.type || 'post'} report</span>
+                      </div>
+                      {report.createdAt && (
+                        <span className="text-gray-600 text-xs flex-shrink-0">{new Date(report.createdAt).toLocaleDateString()}</span>
+                      )}
                     </div>
                     <p className="text-gray-300 text-sm font-medium">{report.reason || 'No reason provided'}</p>
                     {report.details && <p className="text-gray-500 text-xs mt-1 line-clamp-2">{report.details}</p>}
@@ -805,11 +505,11 @@ function PostsTab() {
                   {report.status !== 'resolved' && (
                     <div className="flex gap-1 flex-shrink-0">
                       <button onClick={() => resolveReport(report.id)}
-                        className="p-2 text-gray-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition" title="Mark resolved">
+                        className="p-2.5 text-gray-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition" title="Mark resolved">
                         <CheckCircle className="w-4 h-4" />
                       </button>
                       <button onClick={() => dismissReport(report.id)}
-                        className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition" title="Dismiss">
+                        className="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition" title="Dismiss">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -822,6 +522,184 @@ function PostsTab() {
       )}
 
       {createPostOpen && <CreatePostModal onClose={() => setCreatePostOpen(false)} onSaved={fetchPosts} />}
+    </div>
+  );
+}
+
+// ── ReviewsTab ────────────────────────────────────────────────────────────────
+function ReviewsTab() {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filterRating, setFilterRating] = useState('all');
+
+  useEffect(() => { fetchReviews(); }, []);
+
+  const fetchReviews = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/admin/reviews');
+      setReviews(res.data.reviews || []);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to load reviews');
+      console.error('Reviews load error:', err.response?.data || err.message);
+    } finally { setLoading(false); }
+  };
+
+  const deleteReview = async (id) => {
+    if (!confirm('Delete this review? This cannot be undone.')) return;
+    try {
+      await api.delete(`/admin/reviews/${id}`);
+      toast.success('Review deleted');
+      setReviews(prev => prev.filter(r => r.id !== id));
+    } catch { toast.error('Failed to delete review'); }
+  };
+
+  const filtered = reviews.filter(r => {
+    const matchSearch =
+      r.comment?.toLowerCase().includes(search.toLowerCase()) ||
+      r.reviewer?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      r.freelancer?.fullName?.toLowerCase().includes(search.toLowerCase());
+    const matchRating = filterRating === 'all' || r.rating === Number(filterRating);
+    return matchSearch && matchRating;
+  });
+
+  const avgRating = reviews.length
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : '—';
+
+  const ratingCounts = [5, 4, 3, 2, 1].map(n => ({
+    star: n,
+    count: reviews.filter(r => r.rating === n).length,
+  }));
+
+  function StarRow({ rating }) {
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map(s => (
+          <Star key={s} className={`w-3.5 h-3.5 ${s <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-700'}`} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Summary bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-yellow-500/15 flex items-center justify-center">
+            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-white">{avgRating}</p>
+            <p className="text-gray-500 text-xs">Avg Rating</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center">
+            <MessageSquare className="w-4 h-4 text-blue-400" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-white">{reviews.length}</p>
+            <p className="text-gray-500 text-xs">Total Reviews</p>
+          </div>
+        </div>
+        {ratingCounts.slice(0, 2).map(({ star, count }) => (
+          <div key={star} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+              <span className="text-yellow-400 font-bold text-sm">{star}★</span>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white">{count}</p>
+              <p className="text-gray-500 text-xs">{star}-star reviews</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by reviewer, freelancer, or comment..."
+            className="w-full pl-11 pr-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-[#00564C]/50 text-sm transition"
+          />
+        </div>
+        <select
+          value={filterRating}
+          onChange={e => setFilterRating(e.target.value)}
+          className="px-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white text-sm focus:outline-none focus:border-[#00564C]/50 transition"
+        >
+          <option value="all">All Ratings</option>
+          {[5, 4, 3, 2, 1].map(n => (
+            <option className='text-black' key={n} value={n}>{n} Star{n !== 1 ? 's' : ''}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-24 rounded-2xl bg-white/[0.03] animate-pulse" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+            <Star className="w-7 h-7 text-gray-600" />
+          </div>
+          <p className="text-gray-500 text-sm">No reviews found</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((review, i) => (
+            <motion.div
+              key={review.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.03 }}
+              className="p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition group"
+            >
+              <div className="flex items-start gap-3 md:gap-4">
+                {/* Reviewer avatar */}
+                <img
+                  src={review.reviewer?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.fullName || 'U')}&background=00564C&color=fff`}
+                  alt={review.reviewer?.fullName}
+                  className="w-9 h-9 rounded-full object-cover ring-1 ring-white/10 flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-white text-sm font-semibold">{review.reviewer?.fullName || 'Unknown'}</span>
+                      <span className="text-gray-600 text-xs">→</span>
+                      <span className="text-[#4ade80] text-sm font-semibold">{review.freelancer?.fullName || 'Unknown'}</span>
+                    </div>
+                    <span className="text-gray-600 text-xs flex-shrink-0">
+                      {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
+                  <StarRow rating={review.rating} />
+                  <p className="text-gray-300 text-sm leading-relaxed line-clamp-3 mt-1">{review.comment}</p>
+                  {review.projectId && (
+                    <p className="text-gray-600 text-xs mt-1">Project ID: {review.projectId}</p>
+                  )}
+                </div>
+                {/* Delete — always visible on mobile, hover-only on desktop */}
+                <button
+                  onClick={() => deleteReview(review.id)}
+                  className="p-2 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
+                  title="Delete review"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -902,6 +780,7 @@ export default function AdminDashboard() {
     { id: 'users', label: 'Users', icon: Users },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
     { id: 'posts', label: 'Posts', icon: MessageSquare },
+    { id: 'reviews', label: 'Reviews', icon: Star },
     { id: 'profile', label: 'My Profile', icon: User },
   ];
 
@@ -931,37 +810,38 @@ export default function AdminDashboard() {
 
       {/* Main */}
       <div className="md:ml-60 flex-1 flex flex-col min-h-screen">
-        <header className="sticky top-0 z-20 flex items-center justify-between px-8 py-4 border-b border-white/[0.06] bg-[#060d0c]/20 backdrop-blur">
-          <div>
-            <h1 className="text-lg font-bold text-white capitalize">
+        <header className="sticky top-0 z-20 flex items-center justify-between px-4 md:px-8 py-3 md:py-4 border-b border-white/[0.06] bg-[#060d0c]/20 backdrop-blur gap-3">
+          <div className="min-w-0">
+            <h1 className="text-base md:text-lg font-bold text-white capitalize truncate">
               {tab === 'overview' ? 'Dashboard' : tab === 'posts' ? 'Posts & Reports' : tab}
             </h1>
-            <p className="text-gray-600 text-xs mt-0.5">
+            <p className="text-gray-600 text-xs mt-0.5 hidden sm:block">
               {tab === 'overview' && 'Platform activity at a glance'}
               {tab === 'blogs' && 'Create and manage blog posts'}
               {tab === 'users' && 'View and manage registered users'}
               {tab === 'jobs' && 'Monitor job postings'}
               {tab === 'posts' && 'Manage community posts and handle reports'}
+              {tab === 'reviews' && 'View and moderate user reviews'}
               {tab === 'profile' && 'Manage your admin account'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {tab === 'blogs' && (
               <motion.button whileTap={{ scale: 0.97 }} onClick={() => setBlogModal({})}
-                className="flex items-center gap-2 px-4 py-2 bg-[#00564C] hover:bg-[#006b5e] text-white rounded-xl text-sm font-medium transition shadow-lg shadow-[#00564C]/20">
-                <Plus className="w-4 h-4" /> New Blog
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-[#00564C] hover:bg-[#006b5e] text-white rounded-xl text-sm font-medium transition shadow-lg shadow-[#00564C]/20">
+                <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Blog</span>
               </motion.button>
             )}
             {tab === 'users' && (
               <motion.button whileTap={{ scale: 0.97 }} onClick={() => setBroadcastModal({})}
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 rounded-xl text-sm font-medium transition">
-                <Megaphone className="w-4 h-4" /> Broadcast
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 rounded-xl text-sm font-medium transition">
+                <Megaphone className="w-4 h-4" /> <span className="hidden sm:inline">Broadcast</span>
               </motion.button>
             )}
           </div>
         </header>
 
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 md:p-8">
           <AnimatePresence mode="wait">
             <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
 
@@ -1029,20 +909,20 @@ export default function AdminDashboard() {
                   <div className="space-y-3">
                     {filteredBlogs.map((blog, i) => (
                       <motion.div key={blog.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                        className="flex items-center gap-4 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition group">
-                        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-white/[0.05]">
+                        className="flex items-center gap-3 p-3 md:p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition group">
+                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden flex-shrink-0 bg-white/[0.05]">
                           {blog.image ? <img src={blog.image} alt={blog.title} className="w-full h-full object-cover" />
                             : <div className="w-full h-full flex items-center justify-center"><FileText className="w-5 h-5 text-gray-600" /></div>}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-white font-semibold text-sm truncate">{blog.title}</p>
-                          <p className="text-gray-500 text-xs truncate mt-0.5">{blog.description}</p>
+                          <p className="text-gray-500 text-xs truncate mt-0.5 hidden sm:block">{blog.description}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-[10px] text-gray-600">By {blog.authorName || 'Admin'}</span>
                             {blog.createdAt && <span className="text-[10px] text-gray-700">• {new Date(blog.createdAt).toLocaleDateString()}</span>}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition">
                           <a href={`/blogs/${blog.id}`} target="_blank" rel="noreferrer"
                             className="p-2 text-gray-500 hover:text-white hover:bg-white/[0.08] rounded-lg transition">
                             <Eye className="w-4 h-4" />
@@ -1063,62 +943,111 @@ export default function AdminDashboard() {
               {/* Users */}
               {tab === 'users' && (
                 loading ? (
-                  <div className="space-y-2">{[...Array(6)].map((_, i) => <div key={i} className="h-14 rounded-xl bg-white/[0.03] animate-pulse" />)}</div>
+                  <div className="space-y-2">{[...Array(6)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-white/[0.03] animate-pulse" />)}</div>
                 ) : (
-                  <div className="rounded-2xl border border-white/[0.06] overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-white/[0.06]">
-                          {['User', 'Role', 'Joined', ''].map(h => (
-                            <th key={h} className="text-left px-5 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredUsers.map((u, i) => (
-                          <motion.tr key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                            className="border-b border-white/[0.04] hover:bg-white/[0.03] transition group">
-                            <td className="px-5 py-3">
-                              <div className="flex items-center gap-3">
-                                <img src={u.role === 'admin' ? '/img/afro-task.png' : (u.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName || 'U')}&background=00564C&color=fff`)}
-                                  alt={u.fullName} className="w-8 h-8 rounded-full object-cover ring-1 ring-white/10" />
-                                <div>
-                                  <p className="text-white text-sm font-medium">{u.fullName}</p>
-                                  <p className="text-gray-600 text-xs">{u.email}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-5 py-3">
-                              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                  <>
+                    {/* ── Mobile card list (< md) ── */}
+                    <div className="md:hidden space-y-2">
+                      {filteredUsers.length === 0 ? (
+                        <div className="text-center py-12 text-gray-600 text-sm">No users found</div>
+                      ) : filteredUsers.map((u, i) => (
+                        <motion.div key={u.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                          className="flex items-center gap-3 p-3 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                          <img
+                            src={u.role === 'admin' ? '/img/afro-task.png' : (u.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName || 'U')}&background=00564C&color=fff`)}
+                            alt={u.fullName}
+                            className="w-10 h-10 rounded-full object-cover ring-1 ring-white/10 flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{u.fullName}</p>
+                            <p className="text-gray-500 text-xs truncate">{u.email}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
                                 u.role === 'freelancer' ? 'bg-emerald-500/15 text-emerald-400' :
                                 u.role === 'client' ? 'bg-yellow-500/15 text-yellow-400' : 'bg-purple-500/15 text-purple-400'
                               }`}>{u.role}</span>
-                            </td>
-                            <td className="px-5 py-3 text-gray-400 text-xs">
-                              {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
-                            </td>
-                            <td className="px-5 py-3 text-right">
-                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
-                                <button onClick={() => navigate(u.role === 'admin' ? `/admin/profile/${u.id}` : `/profile/${u.id}`)}
-                                  className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition" title="View profile">
-                                  <Eye className="w-3.5 h-3.5" />
-                                </button>
-                                <button onClick={() => setBroadcastModal({ userId: u.id, userName: u.fullName })}
-                                  className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition" title="Send notification">
-                                  <Send className="w-3.5 h-3.5" />
-                                </button>
-                                <button onClick={() => deleteUser(u.id)}
-                                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </motion.tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {filteredUsers.length === 0 && <div className="text-center py-12 text-gray-600 text-sm">No users found</div>}
-                  </div>
+                              <span className="text-gray-600 text-[10px]">
+                                {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button onClick={() => navigate(u.role === 'admin' ? `/admin/profile/${u.id}` : `/profile/${u.id}`)}
+                              className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition" title="View profile">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setBroadcastModal({ userId: u.id, userName: u.fullName })}
+                              className="p-2 text-gray-500 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition" title="Message">
+                              <Send className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => deleteUser(u.id)}
+                              className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* ── Desktop table (≥ md) ── */}
+                    <div className="hidden md:block rounded-2xl border border-white/[0.06] overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/[0.06]">
+                            {['User', 'Role', 'Joined', 'Last Seen', ''].map(h => (
+                              <th key={h} className="text-left px-5 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredUsers.map((u, i) => (
+                            <motion.tr key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                              className="border-b border-white/[0.04] hover:bg-white/[0.03] transition group">
+                              <td className="px-5 py-3">
+                                <div className="flex items-center gap-3">
+                                  <img src={u.role === 'admin' ? '/img/afro-task.png' : (u.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName || 'U')}&background=00564C&color=fff`)}
+                                    alt={u.fullName} className="w-8 h-8 rounded-full object-cover ring-1 ring-white/10" />
+                                  <div>
+                                    <p className="text-white text-sm font-medium">{u.fullName}</p>
+                                    <p className="text-gray-600 text-xs">{u.email}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-5 py-3">
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                  u.role === 'freelancer' ? 'bg-emerald-500/15 text-emerald-400' :
+                                  u.role === 'client' ? 'bg-yellow-500/15 text-yellow-400' : 'bg-purple-500/15 text-purple-400'
+                                }`}>{u.role}</span>
+                              </td>
+                              <td className="px-5 py-3 text-gray-400 text-xs">
+                                {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                              </td>
+                              <td className="px-5 py-3 text-gray-400 text-xs">
+                                {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                              </td>
+                              <td className="px-5 py-3 text-right">
+                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                                  <button onClick={() => navigate(u.role === 'admin' ? `/admin/profile/${u.id}` : `/profile/${u.id}`)}
+                                    className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition" title="View profile">
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => setBroadcastModal({ userId: u.id, userName: u.fullName })}
+                                    className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition" title="Send notification">
+                                    <Send className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => deleteUser(u.id)}
+                                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {filteredUsers.length === 0 && <div className="text-center py-12 text-gray-600 text-sm">No users found</div>}
+                    </div>
+                  </>
                 )
               )}
 
@@ -1137,13 +1066,13 @@ export default function AdminDashboard() {
                   <div className="space-y-2">
                     {filteredJobs.map((job, i) => (
                       <motion.div key={job.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                        className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition group">
+                        className="flex items-center gap-3 px-3 md:px-5 py-3 md:py-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition group">
                         <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
                           <Briefcase className="w-4 h-4 text-purple-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-white text-sm font-semibold truncate">{job.title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${job.status === 'open' ? 'bg-green-500/15 text-green-400' : 'bg-gray-700 text-gray-400'}`}>
                               {job.status?.toUpperCase()}
                             </span>
@@ -1151,7 +1080,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <button onClick={() => deleteJob(job.id)}
-                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100">
+                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition md:opacity-0 md:group-hover:opacity-100 flex-shrink-0">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </motion.div>
@@ -1162,6 +1091,9 @@ export default function AdminDashboard() {
 
               {/* Posts & Reports */}
               {tab === 'posts' && <PostsTab />}
+
+              {/* Reviews */}
+              {tab === 'reviews' && <ReviewsTab />}
 
 
             </motion.div>

@@ -245,13 +245,11 @@ export default function Blogs() {
         )}
       </div>
 
-      {/* <ProductSection /> */}
-
       {/* Blog list */}
       <div className="p-4 sm:p-6 lg:p-8">
   
           {/* Masonry layout */}
-          <div className="mx-auto max-w-7xl columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+          <div className="mx-auto max-w-7xl columns-1 sm:columns-2 lg:columns-3 xl:columns-3 gap-6 space-y-6">
             {filteredBlogs.slice(0, visibleCount).map((blog) => (
               <div key={blog.id} className="relative group break-inside-avoid mb-6">
                 

@@ -80,7 +80,7 @@ export const register = async (req, res) => {
     const { 
       fullName, email, password, role, whatsapp, country, 
       skillCategory, portfolioWebsite, linkedIn, 
-      companyName, companyType 
+      companyName, companyType, nationalId
     } = req.body;
 
     // Check if user already exists
@@ -119,6 +119,8 @@ export const register = async (req, res) => {
       companyName: companyName || null,
       companyType: companyType || null,
       accountType,
+      nin: nin || null,
+      ninVerified: false,
       createdAt: new Date().toISOString()
     };
 

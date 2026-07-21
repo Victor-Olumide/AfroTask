@@ -13,6 +13,7 @@ import {
   sendPasswordResetEmail,
   signOut,
   googleProvider,
+  appleProvider,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
@@ -56,6 +57,7 @@ const LoginPage = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
 
   // Handle redirect result (for browsers that block popups)
   useEffect(() => {
@@ -182,6 +184,37 @@ const LoginPage = () => {
       console.error('Google login error:', err);
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setAppleLoading(true);
+    try {
+      const result = await signInWithPopup(auth, appleProvider);
+      const { user } = result;
+      await signOut(auth);
+
+      const response = await api.post('/auth/google', {
+        email: user.email,
+        fullName: user.displayName || user.email?.split('@')[0],
+        profileImage: user.photoURL,
+        googleUid: user.uid,
+      });
+
+      if (response.data.needsRole) {
+        toast('Please choose your account type to continue.', { icon: 'ℹ️' });
+        navigate('/welcome');
+        return;
+      }
+
+      toast.success('Logged in with Apple!');
+      login(response.data.token, response.data.user);
+    } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+      toast.error('Apple sign-in failed. Please try again.');
+      console.error('Apple login error:', err);
+    } finally {
+      setAppleLoading(false);
     }
   };
 
@@ -369,6 +402,19 @@ const LoginPage = () => {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 {googleLoading ? 'Signing in...' : 'Continue with Google'}
+              </button>
+
+              {/* Apple Sign-In */}
+              <button
+                type="button"
+                onClick={handleAppleLogin}
+                disabled={appleLoading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 mt-3 bg-black hover:bg-gray-900 text-white rounded-lg transition font-medium disabled:opacity-50"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.39.07 2.35.74 3.15.8 1.2-.24 2.35-.93 3.62-.84 1.54.12 2.7.72 3.44 1.84-3.14 1.88-2.39 5.98.48 7.13-.57 1.56-1.32 3.1-2.69 3.95zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                </svg>
+                {appleLoading ? 'Signing in...' : 'Continue with Apple'}
               </button>
 
               <p className="mt-5 text-center text-gray-600 text-sm">

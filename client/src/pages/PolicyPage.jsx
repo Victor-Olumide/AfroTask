@@ -1,175 +1,285 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import WhiteNavbar from '../components/navbar/WhiteNavbar';
 import Footer from '../components/Footer';
 import { FaArrowRightLong } from "react-icons/fa6";
+import { 
+  ShieldAlert, Database, BarChart, Share2, 
+  Lock, UserCheck, Cookie, Scale, RefreshCcw, 
+  Mail, CheckCircle2, ShieldCheck, AlertCircle 
+} from "lucide-react";
 
 export default function PolicyPage() {
+  const [activeSection, setActiveSection] = useState("introduction");
+
+  // Highlight sidebar link based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = document.querySelectorAll("section[id]");
+      const scrollY = window.scrollY;
+      
+      sections.forEach(section => {
+        const sectionHeight = section.offsetHeight;
+        const sectionTop = section.offsetTop - 150;
+        if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+          setActiveSection(section.getAttribute("id"));
+        }
+      });
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navLinks = [
+    { id: "introduction", label: "Introduction" },
+    { id: "data-collection", label: "Data We Collect" },
+    { id: "data-use", label: "How We Use Data" },
+    { id: "sharing", label: "Data Sharing" },
+    { id: "security", label: "Security" },
+    { id: "freelancer-specific", label: "Freelancer Data" },
+    { id: "cookies", label: "Cookies" },
+    { id: "rights", label: "Your Rights" },
+    { id: "changes", label: "Changes" },
+    { id: "contact", label: "Contact Us" }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans scroll-smooth">
       <WhiteNavbar />
       
-      {/* Hero Section - Fixed blend and overlay */}
-      <section className="relative p-10 bg-[url('/img/sk.png')] bg-cover bg-center bg-no-repeat text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[#00564C]/80"></div>
-        <div className="relative max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent drop-shadow-2xl">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-br from-[#00564C] to-[#023E37] text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('/img/sk.png')] bg-cover bg-center bg-no-repeat mix-blend-overlay"></div>
+        
+        {/* Decorative background shapes */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#FB9E01]/10 blur-3xl"></div>
+
+        <div className="relative max-w-5xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-8">
+            <Lock className="w-4 h-4 text-[#FB9E01]" />
+            Data Protection
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight">
             Privacy Policy
           </h1>
-          <p className="text-green-100 text-sm md:text-lg max-w-2xl  mx-auto leading-relaxed mb-2 drop-shadow-lg">
+          <p className="text-emerald-50 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed opacity-90 mb-8">
             Your trust is our priority. We protect your data with enterprise-grade security while connecting African talent to global opportunities.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center max-w-md mx-auto">
-            <span className="text-xs md:text-sm opacity-90 drop-shadow-md">Last Updated: March 1, 2026</span>
+          <div className="text-sm font-medium text-emerald-100/80">
+            Last Updated: March 1, 2026
           </div>
         </div>
       </section>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-20">
-        {/* Table of Contents */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-          <div className="lg:sticky lg:top-24 lg:h-fit">
-            <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-4">On this page</h2>
-            <nav className="space-y-1 md:space-y-3 text-sm md:text-xl">
-              <a href="#introduction" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">1. Introduction</a>
-              <a href="#data-collection" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">2. Data We Collect</a>
-              <a href="#data-use" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">3. How We Use Data</a>
-              <a href="#sharing" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">4. Data Sharing</a>
-              <a href="#security" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">5. Security</a>
-              <a href="#freelancer-specific" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">6. Freelancer Data</a>
-              <a href="#cookies" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">7. Cookies</a>
-              <a href="#rights" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">8. Your Rights</a>
-              <a href="#changes" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">9. Changes</a>
-              <a href="#contact" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">10. Contact</a>
-            </nav>
-          </div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Layout container with items-start to prevent stretching */}
+        <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-start">
+          
+          {/* Sidebar Navigation */}
+          <aside className="md:w-64 lg:w-72 flex-shrink-0 md:sticky md:top-32 z-10">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
+                Contents
+              </h2>
+              <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-4 md:pb-0 scrollbar-hide">
+                {navLinks.map((link) => (
+                  <a 
+                    key={link.id}
+                    href={`#${link.id}`} 
+                    className={`whitespace-nowrap md:whitespace-normal py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      activeSection === link.id 
+                        ? "bg-[#00564C]/10 text-[#00564C] shadow-sm" 
+                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </aside>
 
           {/* Main Content */}
-          <main className="lg:col-span-3 max-w-none lg:border-l border-gray-200 lg:pl-12">
-            
-            <section id="introduction" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">1. Introduction</h2>
-              <p>
-                Welcome to AfroTask's Privacy Policy. At AfroTask, we connect talented African freelancers with clients worldwide. 
-                Your privacy matters. This policy explains how we collect, use, share, and protect your information.
-              </p>
-              <p>
-                By using AfroTask, you agree to this policy. We comply with applicable data protection laws including GDPR for EU users.
-              </p>
-            </section>
-
-            <section id="data-collection" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">2. Data We Collect</h2>
-              <dl className="ml-6 lg:ml-12">
-                <li><strong>Account Information:</strong> Name, email, phone, password, role (freelancer/client)</li>
-                <li><strong>Profile Data:</strong> Bio, skills, portfolio, location, payment details</li>
-                <li><strong>Job/Project Data:</strong> Proposals, contracts, milestones, reviews</li>
-                <li><strong>Communication:</strong> Messages, notifications, support tickets</li>
-                <li><strong>Usage Data:</strong> IP address, browser type, pages visited</li>
-                <li><strong>Files:</strong> Portfolio images, project deliverables (processed via Cloudinary)</li>
-              </dl>
-            </section>
-
-            <section id="data-use" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">3. How We Use Your Data</h2>
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition">
-                  <h3 className="lg:text-xl md:text-lg font-bold text-[#00564C] mb-4">Matchmaking</h3>
-                  <p>We use your skills and preferences to recommend relevant jobs and freelancers.</p>
+          <main className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 lg:p-12">
+            <div className="prose prose-slate max-w-none">
+              
+              <section id="introduction" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <ShieldAlert className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">1. Introduction</h2>
                 </div>
-                <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition">
-                  <h3 className="lg:text-xl md:text-lg font-bold text-[#00564C] mb-4">Payments</h3>
-                  <p>Process transactions securely and prevent fraud.</p>
-                </div>
-              </div>
-              <dl className="ml-6 lg:ml-12">
-                <li>Provide and improve our services</li>
-                <li>Send notifications and updates</li>
-                <li>Analyze usage for better features</li>
-                <li>Legal compliance and dispute resolution</li>
-              </dl>
-            </section>
-
-            <section id="sharing" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">4. Data Sharing</h2>
-              <p>We never sell your data. We share only when necessary:</p>
-              <dl className="ml-6 lg:ml-12">
-                <li><strong>With freelancers/clients:</strong> Profile info during job matching</li>
-                <li><strong>Service providers:</strong> Firebase, Cloudinary, payment processors</li>
-                <li><strong>Legal:</strong> Court orders, regulators</li>
-                <li><strong>Business transfers:</strong> Mergers/acquisitions</li>
-              </dl>
-            </section>
-
-            <section id="security" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">5. Security</h2>
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-8 rounded-3xl border-l-8 border-[#00564C] mb-8">
-                <h3 className="lg:text-2xl md:text-xl text-sm font-bold text-[#00564C] mb-4">Enterprise-Grade Protection</h3>
-                <dl className="space-y-2 lg:text-lg md:text-base text-xs">
-                  <li> Firebase Authentication & Firestore encryption</li>
-                  <li> End-to-end encryption for messages</li>
-                  <li> 2FA on accounts</li>
-                  <li> Regular security audits</li>
-                  <li> GDPR/CCPA compliant</li>
-                </dl>
-              </div>
-              <p>We use industry-leading security, but no system is 100% secure. Report issues to security@afrotask.com.</p>
-            </section>
-
-            <section id="freelancer-specific" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">6. Freelancer-Specific Protections</h2>
-              <dl className="ml-6 lg:ml-12">
-                <li>Portfolio images encrypted and access-controlled</li>
-                <li>Payment details never shared with clients directly</li>
-                <li>Dispute resolution data protected during mediation</li>
-                <li>Review anonymity option available</li>
-              </dl>
-            </section>
-
-            <section id="cookies" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">7. Cookies & Tracking</h2>
-              <p>We use essential cookies for functionality. Analytics cookies help improve service (opt-out available).</p>
-              <dl className="ml-6 lg:ml-12">
-                <li>Session cookies (expire on logout)</li>
-                <li>Preference cookies (dark mode, etc.)</li>
-                <li>Analytics (anonymized)</li>
-              </dl>
-            </section>
-
-            <section id="rights" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">8. Your Rights</h2>
-              <dl className="ml-6 md:ml-12">
-                <li><strong>Access:</strong> Download your data anytime</li>
-                <li><strong>Delete:</strong> Request account deletion (30-day hold)</li>
-                <li><strong>Correct:</strong> Update inaccurate info</li>
-                <li><strong>Opt-out:</strong> Marketing emails, cookies</li>
-              </dl>
-            </section>
-
-            <section id="changes" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">9. Changes to This Policy</h2>
-              <p>We may update this policy. Significant changes posted 30 days in advance with email notification. Continued use means acceptance.</p>
-            </section>
-
-            <section id="contact">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">10. Contact Us</h2>
-              <div className="bg-white p-12 rounded-3xl shadow-2xl border border-gray-200 max-w-2xl text-center mx-auto lg:mx-0 mt-2">
-                <h3 className="lg:text-2xl text-xl font-bold text-gray-900 mb-6">Questions? We're here to help</h3>
-                <p className="lg:text-lg text-sm text-gray-600 mb-8 leading-relaxed">
-                  Reach our Data Protection Officer anytime.
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  Welcome to AfroTask's Privacy Policy. At AfroTask, we connect talented African freelancers with clients worldwide. 
+                  Your privacy matters. This policy explains how we collect, use, share, and protect your information.
                 </p>
-                <div className="space-y-4 lg:text-lg text-xs">
-                   <a href="/contact" className="block text-white bg-[#00564C] hover:bg-[#017a6c] lg:py-4 py-2 px-4 lg:px-8 rounded-2xl  hover:-translate-y-1 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold flex flex-row items-center justify-center gap-2">
-                    Contact Us <FaArrowRightLong />
-                  </a>
-                </div>
-              </div>
-              <div className="text-center mt-16 lg:p-8 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                <p className="md:text-sm text-xs text-gray-600">
-                  See also our <a href="/terms" className="text-[#00564C] hover:underline font-medium">Terms of Service</a>
+                <p className="text-gray-600 leading-relaxed text-lg mt-4">
+                  By using AfroTask, you agree to this policy. We comply with applicable data protection laws including GDPR for EU users.
                 </p>
-              </div>
-            </section>
+              </section>
 
+              <section id="data-collection" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <Database className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">2. Data We Collect</h2>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                  <ul className="space-y-4 text-gray-600 text-lg list-none pl-0">
+                    <li className="flex gap-3"><span className="mt-1.5 w-2 h-2 rounded-full bg-[#FB9E01] flex-shrink-0"></span><span><strong>Account Information:</strong> Name, email, phone, password, role (freelancer/client).</span></li>
+                    <li className="flex gap-3"><span className="mt-1.5 w-2 h-2 rounded-full bg-[#FB9E01] flex-shrink-0"></span><span><strong>Profile Data:</strong> Bio, skills, portfolio, location, payment details.</span></li>
+                    <li className="flex gap-3"><span className="mt-1.5 w-2 h-2 rounded-full bg-[#FB9E01] flex-shrink-0"></span><span><strong>Job/Project Data:</strong> Proposals, contracts, milestones, reviews.</span></li>
+                    <li className="flex gap-3"><span className="mt-1.5 w-2 h-2 rounded-full bg-[#FB9E01] flex-shrink-0"></span><span><strong>Communication:</strong> Messages, notifications, support tickets.</span></li>
+                    <li className="flex gap-3"><span className="mt-1.5 w-2 h-2 rounded-full bg-[#FB9E01] flex-shrink-0"></span><span><strong>Usage Data:</strong> IP address, browser type, pages visited.</span></li>
+                    <li className="flex gap-3"><span className="mt-1.5 w-2 h-2 rounded-full bg-[#FB9E01] flex-shrink-0"></span><span><strong>Files:</strong> Portfolio images, project deliverables (processed securely via Cloudinary).</span></li>
+                  </ul>
+                </div>
+              </section>
+
+              <section id="data-use" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <BarChart className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">3. How We Use Data</h2>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6 mt-8 mb-8">
+                  <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">Matchmaking</h3>
+                    <p className="text-gray-600 leading-relaxed">We use your skills and preferences to intelligently recommend relevant jobs and highly qualified freelancers.</p>
+                  </div>
+                  <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">Payments</h3>
+                    <p className="text-gray-600 leading-relaxed">Process transactions securely, manage escrow milestones, and actively prevent platform fraud.</p>
+                  </div>
+                </div>
+                <ul className="space-y-3 text-gray-600 text-lg list-none pl-0">
+                  <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" /> Provide, maintain, and improve our platform services.</li>
+                  <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" /> Send essential notifications, alerts, and platform updates.</li>
+                  <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" /> Analyze aggregate usage trends to build better features.</li>
+                  <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" /> Ensure legal compliance and facilitate dispute resolution.</li>
+                </ul>
+              </section>
+
+              <section id="sharing" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <Share2 className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">4. Data Sharing</h2>
+                </div>
+                <p className="text-gray-600 leading-relaxed text-lg mb-6">We never sell your data. We share your information only when absolutely necessary:</p>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                  <ul className="space-y-4 text-gray-600 text-lg list-none pl-0">
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">↳</span> <strong>With freelancers/clients:</strong> Profile information is shared during the job matching and proposal process.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">↳</span> <strong>Service providers:</strong> Trusted partners like Firebase, Cloudinary, and secure payment processors.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">↳</span> <strong>Legal compliance:</strong> To comply with court orders, valid subpoenas, or strict regulatory requests.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">↳</span> <strong>Business transfers:</strong> In the event of a merger, acquisition, or asset sale.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <section id="security" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">5. Security</h2>
+                </div>
+                
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-8 rounded-2xl border border-emerald-200 relative overflow-hidden mb-6">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#00564C]/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                  <h3 className="text-xl font-bold text-[#00564C] mb-4 flex items-center gap-2">
+                    <ShieldCheck className="w-6 h-6" /> Enterprise-Grade Protection
+                  </h3>
+                  
+                  <ul className="space-y-3 text-gray-800 font-medium list-none pl-0">
+                    <li className="flex items-center gap-3"><ShieldCheck className="w-5 h-5 text-emerald-600" /> Firebase Authentication & highly encrypted Firestore databases.</li>
+                    <li className="flex items-center gap-3"><ShieldCheck className="w-5 h-5 text-emerald-600" /> End-to-end encryption for sensitive workspace communications.</li>
+                    <li className="flex items-center gap-3"><ShieldCheck className="w-5 h-5 text-emerald-600" /> Multi-factor authentication support for user accounts.</li>
+                    <li className="flex items-center gap-3"><ShieldCheck className="w-5 h-5 text-emerald-600" /> Comprehensive GDPR & CCPA privacy compliance frameworks.</li>
+                  </ul>
+                </div>
+                <p className="text-sm text-gray-500 italic">While we use industry-leading security practices, no digital system is 100% immune to breaches. Please report any suspected security issues immediately to security@afrotask.com.</p>
+              </section>
+
+              <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-16">
+                <section id="freelancer-specific" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <UserCheck className="w-5 h-5 text-[#FB9E01]" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">6. Freelancer Data</h2>
+                  </div>
+                  <ul className="space-y-3 text-gray-600 list-none pl-0">
+                    <li className="flex items-start gap-2"><span className="text-[#00564C] mt-1">•</span> Portfolio files are encrypted and access-controlled.</li>
+                    <li className="flex items-start gap-2"><span className="text-[#00564C] mt-1">•</span> Direct payment details are never exposed to clients.</li>
+                    <li className="flex items-start gap-2"><span className="text-[#00564C] mt-1">•</span> Dispute records remain strictly confidential.</li>
+                  </ul>
+                </section>
+
+                <section id="cookies" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Cookie className="w-5 h-5 text-[#FB9E01]" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">7. Cookies</h2>
+                  </div>
+                  <p className="text-gray-600 mb-3">We utilize cookies to maintain core platform functionality and improve user experience:</p>
+                  <ul className="space-y-3 text-gray-600 list-none pl-0">
+                    <li className="flex items-start gap-2"><span className="text-[#00564C] mt-1">•</span> <strong>Session:</strong> Authentication tracking (cleared on logout).</li>
+                    <li className="flex items-start gap-2"><span className="text-[#00564C] mt-1">•</span> <strong>Preference:</strong> UI states like dark mode settings.</li>
+                    <li className="flex items-start gap-2"><span className="text-[#00564C] mt-1">•</span> <strong>Analytics:</strong> Fully anonymized usage insights.</li>
+                  </ul>
+                </section>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-16">
+                <section id="rights" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Scale className="w-5 h-5 text-emerald-600" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">8. Your Rights</h2>
+                  </div>
+                  <ul className="space-y-3 text-gray-600 list-none pl-0">
+                    <li className="flex items-start gap-2"><span className="font-semibold text-gray-800">Access:</span> Download a copy of your data at any time.</li>
+                    <li className="flex items-start gap-2"><span className="font-semibold text-gray-800">Delete:</span> Request account deletion (subject to a 30-day hold for dispute prevention).</li>
+                    <li className="flex items-start gap-2"><span className="font-semibold text-gray-800">Correct:</span> Edit and update inaccurate profile data.</li>
+                    <li className="flex items-start gap-2"><span className="font-semibold text-gray-800">Opt-out:</span> Manage marketing emails and non-essential cookies.</li>
+                  </ul>
+                </section>
+
+                <section id="changes" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <RefreshCcw className="w-5 h-5 text-emerald-600" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">9. Changes</h2>
+                  </div>
+                  <p className="text-gray-600">We may update this policy periodically to reflect new regulations or platform features. Significant changes will be posted 30 days in advance along with a direct email notification. Continued use constitutes acceptance.</p>
+                </section>
+              </div>
+
+              <hr className="my-12 border-gray-100" />
+
+              <section id="contact" className="scroll-mt-32 text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 text-[#00564C] mb-6">
+                  <Mail className="w-8 h-8" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Questions? We're here to help</h2>
+                <p className="text-lg text-gray-600 mb-8 max-w-lg mx-auto">
+                  If you have concerns about your data, our Data Protection Officer is available to assist you.
+                </p>
+                
+                <a 
+                  href="/contact" 
+                  className="inline-flex items-center justify-center gap-3 text-white bg-[#00564C] hover:bg-[#023E37] py-4 px-10 rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-lg shadow-emerald-900/20"
+                >
+                  Contact DPO <FaArrowRightLong />
+                </a>
+                
+                <p className="mt-8 text-sm text-gray-500">
+                  See also our <a href="/terms" className="text-[#00564C] font-semibold hover:underline">Terms of Service</a> for platform rules.
+                </p>
+              </section>
+
+            </div>
           </main>
         </div>
       </div>
@@ -178,4 +288,3 @@ export default function PolicyPage() {
     </div>
   );
 }
-

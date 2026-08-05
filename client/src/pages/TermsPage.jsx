@@ -1,174 +1,284 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import WhiteNavbar from '../components/navbar/WhiteNavbar';
 import Footer from '../components/Footer';
 import { FaArrowRightLong } from "react-icons/fa6";
+import { 
+  FileText, ShieldCheck, Briefcase, CreditCard, 
+  Users, UserCheck, Scale, Lock, AlertCircle, 
+  Ban, Gavel, Mail
+} from "lucide-react";
 
 export default function TermsPage() {
+  const [activeSection, setActiveSection] = useState("acceptance");
+
+  // Optional: Highlight sidebar link based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = document.querySelectorAll("section[id]");
+      const scrollY = window.scrollY;
+      
+      sections.forEach(section => {
+        const sectionHeight = section.offsetHeight;
+        const sectionTop = section.offsetTop - 150;
+        if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+          setActiveSection(section.getAttribute("id"));
+        }
+      });
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navLinks = [
+    { id: "acceptance", label: "Acceptance" },
+    { id: "accounts", label: "Accounts" },
+    { id: "services", label: "Services" },
+    { id: "payments", label: "Payments & Fees" },
+    { id: "freelancer-obligations", label: "Freelancer Duties" },
+    { id: "client-obligations", label: "Client Duties" },
+    { id: "projects", label: "Projects & Disputes" },
+    { id: "ip-rights", label: "IP Rights" },
+    { id: "termination", label: "Termination" },
+    { id: "liability", label: "Liability" },
+    { id: "governing", label: "Governing Law" },
+    { id: "contact", label: "Contact" }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans scroll-smooth">
       <WhiteNavbar />
       
       {/* Hero Section */}
-      <section className="relative p-10 bg-[url('/img/tm.png')] bg-cover bg-center bg-no-repeat text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[#00564C]/80"></div>
-        <div className="relative max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent drop-shadow-2xl">
+      <section className="relative pt-32 pb-20 bg-gradient-to-br from-[#00564C] to-[#023E37] text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('/img/tm.png')] bg-cover bg-center bg-no-repeat mix-blend-overlay"></div>
+        
+        {/* Decorative background shapes */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#FB9E01]/10 blur-3xl"></div>
+
+        <div className="relative max-w-5xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-8">
+            <ShieldCheck className="w-4 h-4 text-[#FB9E01]" />
+            Legal Agreement
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight">
             Terms of Service
           </h1>
-          <p className="text-green-100 text-sm md:text-lg max-w-2xl mx-auto leading-relaxed opacity-95 mb-2">
-            The legal agreement between you and AfroTask. Governing your use of our freelancer platform.
+          <p className="text-emerald-50 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed opacity-90 mb-8">
+            Please read these terms carefully before using the AfroTask platform. They govern your rights and responsibilities.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
-            <span className="text-xs md:text-sm opacity-90">Last Updated: March 1, 2026</span>
+          <div className="text-sm font-medium text-emerald-100/80">
+            Last Updated: March 1, 2026
           </div>
         </div>
       </section>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-20">
-        {/* Table of Contents */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-          <div className="lg:sticky lg:top-24 lg:h-fit">
-            <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-4">On this page</h2>
-            <nav className="space-y-1 md:space-y-3 text-sm md:text-xl">
-              <a href="#acceptance" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">1. Acceptance</a>
-              <a href="#accounts" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">2. Accounts</a>
-              <a href="#services" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">3. Services</a>
-              <a href="#payments" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">4. Payments & Fees</a>
-              <a href="#freelancer-obligations" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">5. Freelancer Obligations</a>
-              <a href="#client-obligations" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">6. Client Obligations</a>
-              <a href="#projects" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">7. Projects & Disputes</a>
-              <a href="#ip-rights" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">8. IP Rights</a>
-              <a href="#termination" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">9. Termination</a>
-              <a href="#liability" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">10. Liability</a>
-              <a href="#governing" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">11. Governing Law</a>
-              <a href="#contact" className="block py-2 px-3 rounded-lg text-gray-700 hover:text-[#00564C] hover:bg-green-50 font-medium transition">12. Contact</a>
-            </nav>
-          </div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex flex-col lg:flex-row gap-12">
+          
+          {/* Sidebar Navigation */} 
+          <aside className="lg:w-72 flex-shrink-0 sticky top-4">
+            <div className="lg:sticky lg:top-32 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 ">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
+                Contents
+              </h2>
+              {/* Horizontal scroll on mobile, vertical on desktop */}
+              <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide">
+                {navLinks.map((link) => (
+                  <a 
+                    key={link.id}
+                    href={`#${link.id}`} 
+                    className={`whitespace-nowrap lg:whitespace-normal py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      activeSection === link.id 
+                        ? "bg-[#00564C]/10 text-[#00564C] shadow-sm" 
+                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </aside>
 
           {/* Main Content */}
-          <main className="lg:col-span-3 max-w-none lg:border-l border-gray-200 lg:pl-12">
-            
-            <section id="acceptance" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">1. Acceptance of Terms</h2>
-              <p>
-                These Terms of Service ("Terms") govern your access to and use of AfroTask ("Platform," "we," "us"). 
-                By registering or using the Platform, you agree to these Terms and our <a href="/policy">Privacy Policy</a>.
-              </p>
-            </section>
-
-            <section id="accounts" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">2. Accounts & Eligibility</h2>
-              <dl className="ml-6 lg:ml-12">
-                <li>You must be 18+ and legally able to work</li>
-                <li>Provide accurate information; keep account secure</li>
-                <li>Choose role: Freelancer or Client (one primary)</li>
-                <li>Prohibited: Multiple accounts, fake info, spam</li>
-              </dl>
-            </section>
-
-            <section id="services" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">3. Services</h2>
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition">
-                  <h3 className="lg:text-xl md:text-lg font-bold text-[#00564C] mb-4">For Freelancers</h3>
-                  <p>Browse jobs, submit proposals, showcase portfolio, manage projects.</p>
+          <main className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
+            <div className="prose prose-slate max-w-none">
+              
+              <section id="acceptance" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">1. Acceptance of Terms</h2>
                 </div>
-                <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition">
-                  <h3 className="lg:text-xl md:text-lg font-bold text-[#00564C] mb-4">For Clients</h3>
-                  <p>Post jobs, review proposals, hire freelancers, manage payments.</p>
-                </div>
-              </div>
-              <p>We provide matching tools but make no hiring guarantees.</p>
-            </section>
-
-            <section id="payments" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">4. Payments & Fees</h2>
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-8 rounded-3xl border-l-8 border-amber-500 mb-8">
-                <h3 className="lg:text-2xl md:text-xl text-sm  font-bold text-amber-900 mb-4">Platform Fee: 10% of project value</h3>
-                <dl className="space-y-2 lg:text-lg md:text-base text-xs">
-                  <li>Milestone payments held in escrow</li>
-                  <li>Released only on client approval</li>
-                  <li>Disputes: Mediation fee applies</li>
-                </dl>
-              </div>
-              <p>All payments via secure processors. No refunds except as specified.</p>
-            </section>
-
-            <section id="freelancer-obligations" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl font-bold">5. Freelancer Obligations</h2>
-              <dl className="ml-6 lg:ml-12">
-                <li>Deliver work on time, to specifications</li>
-                <li>Communicate professionally</li>
-                <li>Protect client confidential info</li>
-                <li>No plagiarism or low-quality work</li>
-                <li>Handle taxes/VAT as independent contractor</li>
-              </dl>
-            </section>
-
-            <section id="client-obligations" className="mb-12 lg:text-xl md:text-sm text-xs ">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">6. Client Obligations</h2>
-              <dl className="ml-6 lg:ml-12">
-                <li>Provide clear requirements/timelines</li>
-                <li>Review & approve work promptly</li>
-                <li>Pay on time via milestones</li>
-                <li>Provide constructive feedback</li>
-              </dl>
-            </section>
-
-            <section id="projects" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">7. Projects & Dispute Resolution</h2>
-              <p>Projects managed via workspace. Disputes: 7-day mediation. Unresolved → escrow refund proportional to completion.</p>
-            </section>
-
-            <section id="ip-rights" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">8. Intellectual Property Rights</h2>
-              <dl className="ml-6 lg:ml-12">
-                <li>Client owns final deliverables upon payment</li>
-                <li>Freelancer retains portfolio rights (anonymized)</li>
-                <li>Pre-existing IP disclosed upfront</li>
-                <li>Platform owns user-generated content license (non-exclusive)</li>
-              </dl>
-            </section>
-
-            <section id="termination" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">9. Termination</h2>
-              <dl className="ml-6 lg:ml-12">
-                <li>Account suspension for violations</li>
-                <li>30-day notice for termination</li>
-                <li>Open projects completed or refunded</li>
-              </dl>
-            </section>
-
-            <section id="liability" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">10. Limitation of Liability</h2>
-              <p>Platform "as is." No liability for freelancer/client disputes beyond mediation. Max liability = 3 months fees paid.</p>
-            </section>
-
-            <section id="governing" className="mb-12 lg:text-xl md:text-sm text-xs">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">11. Governing Law</h2>
-              <p>Laws of Nigeria govern. Disputes in Lagos courts. International users consent to jurisdiction.</p>
-            </section>
-
-            <section id="contact">
-              <h2 className="lg:text-2xl md:text-xl text-base font-bold">12. Contact Us</h2>
-              <div className="bg-white p-12 rounded-3xl shadow-2xl border border-gray-200 max-w-2xl mx-auto lg:mx-0 mt-2 text-center">
-                <h3 className="lg:text-2xl text-xl font-bold text-gray-900 mb-6">Need clarification?</h3>
-                <p className="lg:text-lg text-sm text-gray-600 mb-8 leading-relaxed">
-                  Our team responds within 24 hours.
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  These Terms of Service ("Terms") govern your access to and use of AfroTask ("Platform," "we," "us"). 
+                  By registering for an account, accessing, or using the Platform, you agree to be bound by these Terms and our <a href="/policy" className="text-[#00564C] font-semibold hover:underline">Privacy Policy</a>. If you do not agree, you must not use our services.
                 </p>
-                <div className="space-y-4 lg:text-lg text-xs">
-                    <a href="/contact" className="block text-white bg-[#00564C] hover:bg-[#017a6c] lg:py-4 py-2 px-4 lg:px-8 rounded-2xl  hover:-translate-y-1 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold flex flex-row items-center justify-center gap-2">
-                    Contact Us <FaArrowRightLong />
-                  </a>
-                </div>
-              </div>
-              <div className="text-center mt-16 lg:p-8 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                <p className="md:text-sm text-xs text-gray-600">
-                  See our <a href="/policy" className="text-[#00564C] hover:underline font-medium">Privacy Policy</a> for data protection.
-                </p>
-              </div>
-            </section>
+              </section>
 
+              <section id="accounts" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">2. Accounts & Eligibility</h2>
+                </div>
+                <ul className="space-y-4 text-gray-600 text-lg list-none pl-0">
+                  <li className="flex gap-3">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#FB9E01] flex-shrink-0"></span>
+                    <span>You must be at least 18 years old and legally capable of forming binding contracts.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#FB9E01] flex-shrink-0"></span>
+                    <span>You agree to provide accurate, current, and complete information during registration and keep your account secure.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#FB9E01] flex-shrink-0"></span>
+                    <span>Users must choose a primary role (Freelancer or Client). Creating multiple accounts to manipulate the system is strictly prohibited.</span>
+                  </li>
+                </ul>
+              </section>
+
+              <section id="services" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <Briefcase className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">3. Services</h2>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6 mt-8">
+                  <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">For Freelancers</h3>
+                    <p className="text-gray-600 leading-relaxed">Access a global marketplace to browse jobs, submit competitive proposals, showcase your digital portfolio, and manage active projects securely.</p>
+                  </div>
+                  <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">For Clients</h3>
+                    <p className="text-gray-600 leading-relaxed">Post detailed job listings, review vetted proposals, hire top-tier talent, and manage milestone payments with confidence.</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-6 italic">Note: AfroTask provides the matching infrastructure but does not guarantee employment or project outcomes.</p>
+              </section>
+
+              <section id="payments" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <CreditCard className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">4. Payments & Fees</h2>
+                </div>
+                
+                <div className="bg-gradient-to-br from-[#fffdfa] to-[#fff8ee] p-8 rounded-2xl border border-[#FB9E01]/20 relative overflow-hidden mb-8">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#FB9E01]/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <span className="bg-[#FB9E01] text-white text-sm py-1 px-3 rounded-full">10%</span> Platform Fee
+                  </h3>
+                  <p className="text-gray-700 mb-6">AfroTask charges a standard 10% platform fee on the total value of successfully completed projects to cover escrow and operational costs.</p>
+                  
+                  <ul className="space-y-3 text-gray-700 font-medium list-none pl-0">
+                    <li className="flex items-center gap-3"><ShieldCheck className="w-5 h-5 text-emerald-600" /> Milestone payments are held securely in escrow.</li>
+                    <li className="flex items-center gap-3"><ShieldCheck className="w-5 h-5 text-emerald-600" /> Funds are released only upon client review and approval.</li>
+                    <li className="flex items-center gap-3"><AlertCircle className="w-5 h-5 text-amber-500" /> In the event of a dispute, a mediation fee may apply.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <section id="freelancer-obligations" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <UserCheck className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">5. Freelancer Obligations</h2>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                  <ul className="space-y-4 text-gray-600 text-lg list-none pl-0">
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">✓</span> Deliver work on time and exactly to the agreed-upon specifications.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">✓</span> Maintain professional, timely communication throughout the project.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">✓</span> Protect and respect all client confidential information.</li>
+                    <li className="flex gap-3"><span className="text-red-500 font-bold">✕</span> Strictly no plagiarism, AI-generated content (unless requested), or low-quality work.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <section id="client-obligations" className="scroll-mt-32 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-emerald-50 rounded-xl text-[#00564C]">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 m-0">6. Client Obligations</h2>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                  <ul className="space-y-4 text-gray-600 text-lg list-none pl-0">
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">✓</span> Provide clear project requirements, scope, and achievable timelines.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">✓</span> Review submissions and approve satisfactory work promptly.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">✓</span> Ensure milestones are funded on time to prevent workflow blockages.</li>
+                    <li className="flex gap-3"><span className="text-[#00564C] font-bold">✓</span> Provide constructive, professional feedback during revisions.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <div className="grid md:grid-cols-2 gap-12 mb-16">
+                <section id="projects" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Gavel className="w-5 h-5 text-[#FB9E01]" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">7. Disputes</h2>
+                  </div>
+                  <p className="text-gray-600">Projects are managed via the AfroTask workspace. In case of a dispute, we require a mandatory 7-day mediation period. If unresolved, escrow funds will be refunded proportionally based on work completion and evidence provided.</p>
+                </section>
+
+                <section id="ip-rights" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Lock className="w-5 h-5 text-[#FB9E01]" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">8. IP Rights</h2>
+                  </div>
+                  <p className="text-gray-600">Clients gain full ownership of deliverables immediately upon milestone payment. Freelancers retain the right to display anonymized work in their portfolios unless an NDA is signed. AfroTask retains a non-exclusive license to platform-generated content.</p>
+                </section>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-12 mb-16">
+                <section id="termination" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Ban className="w-5 h-5 text-red-500" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">9. Termination</h2>
+                  </div>
+                  <p className="text-gray-600">We reserve the right to suspend or terminate accounts for severe TOS violations immediately. For voluntary termination, a 30-day notice is standard, and all open projects must be completed or settled via escrow refunds.</p>
+                </section>
+
+                <section id="liability" className="scroll-mt-32">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Scale className="w-5 h-5 text-gray-900" />
+                    <h2 className="text-xl font-bold text-gray-900 m-0">10. Liability & Law</h2>
+                  </div>
+                  <p className="text-gray-600">The platform is provided "as is." Our maximum liability is limited to 3 months of fees paid. These terms are governed by the laws of Nigeria. Any legal disputes will be handled exclusively in the courts of Lagos.</p>
+                </section>
+              </div>
+
+              <hr className="my-12 border-gray-100" />
+
+              <section id="contact" className="scroll-mt-32 text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 text-[#00564C] mb-6">
+                  <Mail className="w-8 h-8" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Need clarification?</h2>
+                <p className="text-lg text-gray-600 mb-8 max-w-lg mx-auto">
+                  Our legal and support teams are available to help you understand your rights on AfroTask. We respond to all inquiries within 24 hours.
+                </p>
+                
+                <a 
+                  href="/contact" 
+                  className="inline-flex items-center justify-center gap-3 text-white bg-[#00564C] hover:bg-[#023E37] py-4 px-10 rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-lg shadow-emerald-900/20"
+                >
+                  Contact Support <FaArrowRightLong />
+                </a>
+                
+                <p className="mt-8 text-sm text-gray-500">
+                  For data protection inquiries, please see our <a href="/policy" className="text-[#00564C] font-semibold hover:underline">Privacy Policy</a>.
+                </p>
+              </section>
+
+            </div>
           </main>
         </div>
       </div>

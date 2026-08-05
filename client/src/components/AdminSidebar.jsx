@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Users, Briefcase, FileText, BarChart2, LogOut,
   MessageSquare, User, ChevronRight, Megaphone, Menu, X, Star,
@@ -18,8 +18,12 @@ const TABS = [
   { id: 'profile', label: 'My Profile', icon: User },
 ];
 
-function SidebarContent({ user, tab, setTab, setSearch, logout, onBroadcast, onClose }) {
+function SidebarContent({ user, setSearch, logout, onBroadcast, onClose }) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  // derive active tab from URL: /admin/dashboard/:tab or /admin/dashboard → overview
+  const activeTab = pathname.split('/admin/dashboard/')[1] || 'overview';
 
   const handleTabClick = (id) => {
     if (id === 'profile') {
@@ -27,7 +31,7 @@ function SidebarContent({ user, tab, setTab, setSearch, logout, onBroadcast, onC
     } else if (id === 'chats') {
       navigate('/admin/messages');
     } else {
-      setTab(id);
+      navigate(`/admin/dashboard/${id}`);
       setSearch('');
     }
     onClose?.();
@@ -63,13 +67,13 @@ function SidebarContent({ user, tab, setTab, setSearch, logout, onBroadcast, onC
         {TABS.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => handleTabClick(id)}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              tab === id
+              activeTab === id
                 ? 'bg-[#00564C]/20 text-emerald-400 border border-[#00564C]/30'
                 : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.04]'
             }`}>
             <Icon className="w-4 h-4 flex-shrink-0" />
             {label}
-            {tab === id && <ChevronRight className="w-3 h-3 ml-auto" />}
+            {activeTab === id && <ChevronRight className="w-3 h-3 ml-auto" />}
           </button>
         ))}
       </nav>
@@ -100,7 +104,7 @@ function SidebarContent({ user, tab, setTab, setSearch, logout, onBroadcast, onC
   );
 }
 
-export default function AdminSidebar({ user, tab, setTab, setSearch, logout, onBroadcast }) {
+export default function AdminSidebar({ user, setSearch, logout, onBroadcast }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -108,8 +112,10 @@ export default function AdminSidebar({ user, tab, setTab, setSearch, logout, onB
       {/* ── Desktop sidebar (always visible ≥ md) ── */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 flex-col z-30 border-r border-white/[0.06] bg-gray-900">
         <SidebarContent
-          user={user} tab={tab} setTab={setTab}
-          setSearch={setSearch} logout={logout} onBroadcast={onBroadcast}
+          user={user}
+          setSearch={setSearch}
+          logout={logout}
+          onBroadcast={onBroadcast}
         />
       </aside>
 
@@ -145,8 +151,10 @@ export default function AdminSidebar({ user, tab, setTab, setSearch, logout, onB
               className="md:hidden fixed inset-y-0 left-0 w-64 z-50 bg-gray-900 border-r border-white/[0.06] flex flex-col"
             >
               <SidebarContent
-                user={user} tab={tab} setTab={setTab}
-                setSearch={setSearch} logout={logout} onBroadcast={onBroadcast}
+                user={user}
+                setSearch={setSearch}
+                logout={logout}
+                onBroadcast={onBroadcast}
                 onClose={() => setMobileOpen(false)}
               />
             </motion.aside>

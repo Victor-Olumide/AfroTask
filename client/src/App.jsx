@@ -227,6 +227,11 @@ function App() {
               <AdminDashboard />
             </PrivateRoute>
           } />
+          <Route path="/admin/dashboard/:tab" element={
+            <PrivateRoute role="admin">
+              <AdminDashboard />
+            </PrivateRoute>
+          } />
           <Route path="/admin/messages" element={
             <PrivateRoute role="admin">
               <MessagesPage />

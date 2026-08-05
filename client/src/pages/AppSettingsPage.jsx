@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   LogOut,
@@ -148,7 +148,7 @@ function TextArea({ label, ...props }) {
 }
 
 export default function AppSettingsPage() {
-  const { user, logout } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const { dark, toggle } = useDarkMode();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -228,14 +228,20 @@ export default function AppSettingsPage() {
         formData.append('profileImage', profileImageFile);
       }
 
-      await api.put('/profile/update', formData, {
+      const res = await api.put('/profile/update', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      toast.success('Profile settings saved');
+      // Update the user in context so the rest of the app reflects the changes
+      if (res.data?.user) {
+        setUser(res.data.user);
+      }
+
+      toast.success('Profile saved');
       setUnsavedProfile(false);
+      setProfileImageFile(null);
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Failed to save profile settings');
+      toast.error(error?.response?.data?.message || 'Failed to save profile');
     } finally {
       setSavingProfile(false);
     }
@@ -283,10 +289,7 @@ export default function AppSettingsPage() {
       setShowPasswordFields(false);
       toast.success('Password updated');
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message ||
-          'Password endpoint is not available yet. Add it on the backend or remove this section for now.'
-      );
+      toast.error(error?.response?.data?.message || 'Failed to update password');
     } finally {
       setSavingPassword(false);
     }
@@ -296,40 +299,33 @@ export default function AppSettingsPage() {
     <div className="min-h-screen bg-[#f7f8fa] px-4 py-6 text-gray-900 dark:bg-[#071411] dark:text-white md:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-[#00564C] to-[#0b7a6d] p-6 text-white shadow-lg md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="mb-3 flex items-center gap-3 text-white/80">
-              <button
-                onClick={() => navigate(-1)}
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm hover:bg-white/15"
-              >
-                <ArrowLeft size={16} />
-                Back
-              </button>
-              <span className="rounded-full border border-white/20 px-3 py-1 text-xs uppercase tracking-[0.2em]">
-                {roleLabel} Settings
-              </span>
+        <div className="mb-6 flex items-center justify-between gap-4 border-b border-gray-200 pb-5 dark:border-white/10">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center rounded-xl border border-gray-200 p-2 text-gray-500 transition hover:border-gray-300 hover:text-gray-800 dark:border-white/10 dark:text-white/60 dark:hover:border-white/20 dark:hover:text-white"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Settings</h1>
+              <p className="text-xs text-gray-500 dark:text-white/50 capitalize">{roleLabel} account</p>
             </div>
-            <h1 className="text-3xl font-bold md:text-4xl">App Settings</h1>
-            <p className="mt-2 max-w-2xl text-sm text-white/80 md:text-base">
-              Manage your profile details, notifications, appearance, and account security from one place.
-            </p>
           </div>
 
-          <div className="flex items-center gap-4 rounded-3xl bg-white/10 p-4 backdrop-blur">
-            <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/20 bg-white/10">
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex flex-col items-end">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.fullName || 'AfroTask User'}</p>
+              <p className="text-xs text-gray-500 dark:text-white/50">{user?.email}</p>
+            </div>
+            <div className="h-9 w-9 overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-white/10 flex-shrink-0">
               {profileImagePreview ? (
                 <img src={profileImagePreview} alt="Profile" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl font-semibold">
+                <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-[#00564C] dark:text-emerald-300">
                   {(user?.fullName || 'A')[0]}
                 </div>
               )}
-            </div>
-            <div>
-              <p className="font-semibold">{user?.fullName || 'Afro Task User'}</p>
-              <p className="text-sm text-white/75">{user?.email || 'No email available'}</p>
-              <p className="mt-1 text-xs text-white/60">Signed in as {roleLabel.toLowerCase()}</p>
             </div>
           </div>
         </div>
@@ -661,7 +657,7 @@ export default function AppSettingsPage() {
                 )}
 
                 <div className="rounded-2xl border border-gray-200 p-4 dark:border-white/10">
-                  <div className="mb-4 flex items-start gap-3">
+                  <div className="mb-3 flex items-start gap-3">
                     <div className="rounded-xl bg-gray-100 p-2 dark:bg-white/10">
                       <Mail size={18} />
                     </div>
@@ -671,7 +667,7 @@ export default function AppSettingsPage() {
                     </div>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-white/60">
-                    Email change flow is not wired in the current client yet, so this is shown as read-only.
+                    To change your email address, please contact support.
                   </p>
                 </div>
               </div>
@@ -704,7 +700,11 @@ export default function AppSettingsPage() {
 
                 <button
                   type="button"
-                  onClick={() => toast('Account deletion is not connected yet.')}
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                      toast.error('Account deletion is not available yet. Please contact support.');
+                    }
+                  }}
                   className="flex w-full items-center justify-between rounded-2xl border border-red-200 bg-red-50/60 px-4 py-4 text-left transition hover:bg-red-50 dark:border-red-400/20 dark:bg-red-500/10"
                 >
                   <div className="flex items-start gap-3">
@@ -714,11 +714,10 @@ export default function AppSettingsPage() {
                     <div>
                       <p className="font-medium text-red-700 dark:text-red-300">Delete account</p>
                       <p className="mt-1 text-sm text-red-600/80 dark:text-red-300/70">
-                        Keep this disabled or connect it only when you have a confirmed backend flow.
+                        Permanently delete your account and all associated data. This cannot be undone.
                       </p>
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-red-600 dark:text-red-300">Disabled</span>
                 </button>
               </div>
             </SettingsCard>
@@ -727,13 +726,19 @@ export default function AppSettingsPage() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-white/50">
-          <Link to={user?.role === 'client' ? '/client/dashboard' : '/freelancer/dashboard'} className="hover:text-[#00564C] dark:hover:text-emerald-300">
+          <button
+            onClick={() => navigate(user?.role === 'client' ? '/client/dashboard' : '/freelancer/dashboard')}
+            className="hover:text-[#00564C] dark:hover:text-emerald-300 transition"
+          >
             Return to dashboard
-          </Link>
+          </button>
           <span>•</span>
-          <Link to="/profile" className="hover:text-[#00564C] dark:hover:text-emerald-300">
+          <button
+            onClick={() => navigate(user?.role === 'client' ? '/client/profile' : '/freelancer/profile')}
+            className="hover:text-[#00564C] dark:hover:text-emerald-300 transition"
+          >
             Go to profile
-          </Link>
+          </button>
         </div>
       </div>
     </div>

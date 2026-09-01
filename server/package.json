@@ -7,6 +7,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^8.7.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.0",
     "compression": "^1.8.1",

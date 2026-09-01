@@ -67,7 +67,7 @@ app.use(compression());
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://localhost:3000',
+  'http://localhost:3200',
   'https://afro-task-application.vercel.app',
   'https://afrotask.digify.com.ng',
   process.env.FRONTEND_URL,
@@ -150,7 +150,7 @@ const HOST = '0.0.0.0';
 console.log('🔍 Environment Check:');
 console.log('- NODE_ENV:', process.env.NODE_ENV);
 console.log('- PORT:', PORT);
-console.log('- HOST:', HOST);
+console.log('- HOST:', HOST)
 console.log('- FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing');
 console.log('- FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? '✅ Set' : '❌ Missing');
 console.log('- FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? '✅ Set' : '❌ Missing');

@@ -1,165 +1,133 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSearch } from "react-icons/fa";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { FaArrowRight, FaStar } from "react-icons/fa";
+import { HiOutlineSparkles } from "react-icons/hi2";
+import { TbTrendingUp } from "react-icons/tb";
+import { IoCheckmarkCircle } from "react-icons/io5";
 
-const slides = [
-  { type: "image", src: "/img/Ld1.png" },
-  { type: "video", src: "/imgvid/vid_2.mp4" },
-  { type: "video", src: "/imgvid/vid_1.mp4" },
-  { type: "image", src: "/img/whisk.png" },
+const avatarStack = [
+  "/img/fa1.png",
+  "/img/mr_tope.png",
+  "/img/pj.png",
 ];
 
 export default function HeroSection() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [current, setCurrent] = useState(0);
-  const videoRef = useRef(null);
-  const timerRef = useRef(null);
-  const navigate = useNavigate(); 
-
-  const goTo = (index) => setCurrent((index + slides.length) % slides.length);
-
-  useEffect(() => {
-    clearTimeout(timerRef.current);
-    if (slides[current].type === "image") {
-      timerRef.current = setTimeout(() => goTo(current + 1), 5000);
-    }
-    return () => clearTimeout(timerRef.current);
-  }, [current]);
-
-  useEffect(() => {
-    if (slides[current].type === "video" && videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-    }
-  }, [current]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
-  const handleCategoryClick = (category) => {
-    navigate(`/explore-projects?category=${encodeURIComponent(category)}`);
-  };
+  const navigate = useNavigate();
+  const [tasksProcessed] = useState(227);
+  const [availableWorkers] = useState(1331);
 
   return (
-    <div>
-      <div className="relative p-4 md:p-10 m-2 md:m-10 rounded-2xl lg:h-screen md:rounded-3xl min-h-[60vh] overflow-hidden flex flex-col justify-end">
+    <div className="bg-[#F7F6F1] px-4 md:px-10 py-10 md:py-16">
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
 
-        {/* Slides */}
-        {slides.map((slide, i) => (
-          <div
-            key={i}
-            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-              i === current ? "opacity-100" : "opacity-0"
-            }`}
+        <div className="relative">
+          <HiOutlineSparkles className="hidden md:block absolute -left-6 top-0 text-[#FB9E01] text-2xl" />
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+            Empowering ideas.
+            <br />
+            <span className="text-[#00564C]">Connecting real talent.</span>
+          </h1>
+
+          <div className="w-16 h-1 bg-[#00564C]/20 rounded-full mt-4 mb-6" />
+
+          <p className="text-gray-600 text-base md:text-lg max-w-md">
+            Connect with a growing network of skilled freelancers ready to bring
+            your projects to life. Post a task, review submissions, and get
+            quality work done fast.
+          </p>
+
+          <button
+            onClick={() => navigate("/post-project")}
+            className="mt-8 bg-[#00564C] hover:bg-[#027568] text-white px-6 py-3.5 rounded-full font-medium flex items-center gap-2 transition-colors duration-300"
           >
-            {slide.type === "image" ? (
-              <img
-                src={slide.src}
-                alt="hero"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <video
-                ref={i === current ? videoRef : null}
-                src={slide.src}
-                className="w-full h-full object-cover"
-                muted
-                playsInline
-                onEnded={() => goTo(current + 1)}
-              />
-            )}
-            {/* Dark overlay so text stays readable */}
-            <div className="absolute inset-0 bg-black/40" />
+            Post a Task
+            <FaArrowRight className="text-sm" />
+          </button>
+
+          <div className="mt-8 flex items-center gap-3">
+            <div className="flex -space-x-3">
+              {avatarStack.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  className="w-10 h-10 rounded-full border-2 border-[#F7F6F1] object-cover"
+                />
+              ))}
+              <div className="w-10 h-10 rounded-full border-2 border-[#F7F6F1] bg-[#00564C] text-white text-xs font-medium flex items-center justify-center">
+                +800
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 font-medium leading-tight">
+              Over 800+ freelancers
+              <br />
+              ready for your project.
+            </p>
           </div>
-        ))}
+        </div>
 
-        {/* Prev / Next arrows */}
-        <button
-          onClick={() => goTo(current - 1)}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 transition hidden md:flex"
-          aria-label="Previous slide"
-        >
-          <IoIosArrowBack className="text-xl" />
-        </button>
-        <button
-          onClick={() => goTo(current + 1)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 transition hidden md:flex"
-          aria-label="Next slide"
-        >
-          <IoIosArrowForward className="text-xl" />
-        </button>
+        <div className="relative h-[420px] md:h-[480px] hidden md:block">
+          <HiOutlineSparkles className="absolute right-2 top-6 text-[#FB9E01] text-3xl" />
 
-        {/* Dot indicators */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              className={`md:w-2.5 w-1.5 h-1.5 md:h-2.5 rounded-full transition-all duration-300 ${
-                i === current ? "bg-white scale-125" : "bg-white/50"
-              }`}
-              aria-label={`Slide ${i + 1}`}
+          <div className="absolute right-6 top-8 w-[300px] h-[380px] rounded-3xl overflow-hidden shadow-xl rotate-3">
+            <img
+              src="/img/Ld1.png"
+              alt="Freelancer at work"
+              className="w-full h-full object-cover"
             />
-          ))}
+          </div>
+
+          <div className="absolute left-0 top-4 bg-white rounded-2xl shadow-lg p-4 w-[190px] -rotate-2">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-[#FB9E01]/15 flex items-center justify-center">
+                <TbTrendingUp className="text-[#FB9E01]" />
+              </div>
+              <span className="text-xs text-gray-500 font-medium">Tasks Completed</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{tasksProcessed}</p>
+          </div>
+
+          <div className="absolute left-4 bottom-24 bg-white rounded-2xl shadow-lg p-4 w-[220px] rotate-2 z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <img
+                src="/img/pj.png"
+                alt=""
+                className="w-9 h-9 rounded-full object-cover"
+              />
+              <div>
+                <p className="text-sm font-semibold text-gray-900 flex items-center gap-1">
+                  Chuka Obi
+                  <IoCheckmarkCircle className="text-[#00564C] text-sm" />
+                </p>
+                <div className="flex text-[#FB9E01] text-xs">
+                  <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-600">
+              "Delivered great work on time, every time."
+            </p>
+          </div>
+
+          <div className="absolute right-0 bottom-0 bg-white rounded-2xl shadow-lg p-4 w-[210px]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-full bg-[#00564C]/10 flex items-center justify-center">
+                <IoCheckmarkCircle className="text-[#00564C]" />
+              </div>
+              <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Just now</span>
+            </div>
+            <p className="text-sm font-semibold text-gray-900">Active Freelancers</p>
+            <p className="text-xs text-gray-500 mb-2">Ready to work on-demand</p>
+            <div className="border-t border-gray-100 pt-2 flex justify-between items-center">
+              <span className="text-xs text-gray-500">Available now</span>
+              <span className="text-sm font-bold text-[#00564C]">
+                {availableWorkers.toLocaleString()}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Content — unchanged */}
-        <div className="relative z-10 font-bold text-xl md:text-2xl lg:text-3xl flex justify-center flex-col items-center text-center px-2">
-          <p>Empowering Ideas, Connecting</p>
-          <p>Talent , and Building the Future</p>
-        </div>
-
-        <form
-          onSubmit={handleSearch}
-          className="relative z-10 flex justify-center items-center w-full md:w-2/3 mx-auto mt-4 px-2"
-        >
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for freelancers, services..."
-            className="w-full rounded-3xl bg-black/30 border-2 border-[#00564C] ml-0 md:ml-4 my-3 md:my-4 py-3 md:py-4 pl-4 md:pl-12 pr-24 md:pr-36 ring-0 focus:ring-0 focus:outline-none text-white placeholder-gray-300 hover:border-[#004D40] transition-colors duration-300 text-sm md:text-base"
-          />
-          <button
-            type="submit"
-            className="absolute right-1 md:right-0 bg-[#00564C] text-sm lg:text-xl px-6 py-3 md:py-4 font-thin rounded-3xl flex flex-row gap-1 md:gap-2 hover:bg-[#027568] transition-colors duration-300 border-2 border-[#00564C]"
-          >
-            <FaSearch className="text-lg lg:text-2xl" />{" "}
-            <span className="hidden md:inline">Search</span>
-          </button>
-        </form>
-
-        <div className="relative z-10 flex flex-wrap justify-center gap-2 md:gap-4 lg:gap-10 text-sm md:text-xl font-light mt-3 md:mt-5 px-2">
-          <button
-            onClick={() => handleCategoryClick("Web Development")}
-            className="bg-[#00564C] p-2 px-3 md:px-4 rounded-xl md:rounded-2xl hover:bg-[#027568] transition-colors duration-300 cursor-pointer text-xs lg:text-base"
-          >
-            Web Development
-          </button>
-          <button
-            onClick={() => handleCategoryClick("Logo Design")}
-            className="bg-[#00564C] p-2 px-3 md:px-4 rounded-xl md:rounded-2xl hover:bg-[#027568] transition-colors duration-300 cursor-pointer text-xs lg:text-base"
-          >
-            Logo Design
-          </button>
-          <button
-            onClick={() => handleCategoryClick("Video Editing")}
-            className="bg-[#00564C] p-2 px-3 md:px-4 rounded-xl md:rounded-2xl hover:bg-[#027568] transition-colors duration-300 cursor-pointer text-xs lg:text-base"
-          >
-            Video Editing
-          </button>
-          <button
-            onClick={() => handleCategoryClick("Content Writing")}
-            className="bg-[#00564C] p-2 px-3 md:px-4 rounded-xl md:rounded-2xl hover:bg-[#027568] transition-colors duration-300 cursor-pointer text-xs lg:text-base"
-          >
-            Content Writing
-          </button>
-        </div>
       </div>
     </div>
   );

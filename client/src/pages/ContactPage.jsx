@@ -42,13 +42,25 @@ export default function ContactPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <WhiteNavbar />
 
-      <section className="relative pt-24 pb-20 bg-[url('/img/cl.png')] bg-cover bg-center bg-no-repeat text-white overflow-hidden"> 
-      <div className="absolute inset-0 bg-[#00564C]/80 text-white py-14 px-6 text-center">
-        <h1 className="text-3xl md:text-5xl font-bold mb-3">Contact Us</h1>
-        <p className="text-green-100 text-lg max-w-xl mx-auto">
-          Have a question or need help? We'd love to hear from you.
-        </p>
-      </div>
+      <section className="relative pt-32 pb-24 bg-[url('/img/cl.png')] bg-cover bg-center bg-no-repeat text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[#00564C]/90" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative px-6 text-center"
+        >
+          <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/90 text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-5">
+            We're here to help
+          </span>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+            Contact Us
+          </h1>
+          <p className="text-white/75 text-base md:text-lg max-w-xl mx-auto">
+            Have a question or need help? We'd love to hear from you.
+          </p>
+        </motion.div>
       </section>
 
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-12 grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -68,24 +80,24 @@ export default function ContactPage() {
           </div>
 
           <div className="space-y-5">
-            <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
-              <div className="w-10 h-10 bg-[#00564C]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <FaEnvelope className="text-[#00564C]" />
+            <div className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+              <div className="w-11 h-11 bg-[#00564C] rounded-xl flex items-center justify-center flex-shrink-0">
+                <FaEnvelope className="text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-800">Business Email</p>
+                <p className="font-semibold text-gray-900">Business Email</p>
                 <a href="mailto:adaoma2826@gmail.com" className="text-[#00564C] hover:underline text-sm">
                   adaoma2826@gmail.com
                 </a>
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm">
-              <div className="w-10 h-10 bg-[#00564C]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <FaHeadset className="text-[#00564C]" />
+            <div className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+              <div className="w-11 h-11 bg-[#00564C] rounded-xl flex items-center justify-center flex-shrink-0">
+                <FaHeadset className="text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-800">Support Email</p>
+                <p className="font-semibold text-gray-900">Support Email</p>
                 <a href="mailto:mbatab@gmail.com" className="text-[#00564C] hover:underline text-sm">
                   mbatab@gmail.com
                 </a>
@@ -99,7 +111,7 @@ export default function ContactPage() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white rounded-2xl shadow-md p-8"
+          className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8"
         >
           {submitted ? (
             <div className="flex flex-col items-center justify-center h-full py-10 text-center">
@@ -177,7 +189,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#00564C] hover:bg-[#027568] text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
+                className="w-full bg-[#00564C] hover:bg-[#027568] text-white font-semibold py-3.5 rounded-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
               >
                 {loading ? 'Sending...' : 'Send Message'}
               </button>

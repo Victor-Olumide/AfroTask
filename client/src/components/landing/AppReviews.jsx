@@ -61,30 +61,32 @@ function ReviewCard({ review, onEdit, onDelete, user, delay = 0 }) {
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay, ease: "easeOut" }}
-      className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4 h-full relative"
+      className="group relative flex h-full flex-col gap-4 rounded-2xl border border-black/[0.06] bg-white p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#00564C]/15 hover:shadow-[0_16px_32px_-16px_rgba(0,86,76,0.18)]"
     >
+      <span className="absolute inset-x-6 top-0 h-[3px] scale-x-0 rounded-full bg-gradient-to-r from-[#FB9E01] to-[#00564C] transition-transform duration-300 ease-out group-hover:scale-x-100" />
+
       {/* Edit/Delete buttons for own reviews */}
       {isOwnReview && (
-        <div className="absolute top-3 right-3 flex gap-1 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute top-4 right-4 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEdit(review);
             }}
-            className="w-7 h-7 rounded-lg bg-blue-100 hover:bg-blue-200 p-1 flex items-center justify-center text-blue-600 hover:text-blue-700 hover:shadow-md transition-all duration-200 cursor-pointer"
+            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg bg-blue-100 p-1 text-blue-600 transition-all duration-200 hover:bg-blue-200 hover:text-blue-700 hover:shadow-sm"
             title="Edit review"
           >
-            <MdModeEditOutline className="w-4 h-4" />
+            <MdModeEditOutline className="h-4 w-4" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(review.id);
             }}
-            className="w-7 h-7 rounded-lg bg-red-100 hover:bg-red-200 p-1 flex items-center justify-center text-red-600 hover:text-red-700 hover:shadow-md transition-all duration-200 cursor-pointer"
+            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg bg-red-100 p-1 text-red-600 transition-all duration-200 hover:bg-red-200 hover:text-red-700 hover:shadow-sm"
             title="Delete review"
           >
-            <MdDelete className="w-4 h-4" />
+            <MdDelete className="h-4 w-4" />
           </button>
         </div>
       )}
@@ -93,13 +95,13 @@ function ReviewCard({ review, onEdit, onDelete, user, delay = 0 }) {
       <StarRating rating={review.rating} />
 
       {/* Message */}
-      <p className="text-gray-600 text-sm leading-relaxed flex-1">
+      <p className="flex-1 text-sm leading-relaxed text-[#3F4B47]">
         "{review.comment || review.message}"
       </p>
 
       {/* User info */}
-      <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-        <div className="relative w-10 h-10 rounded-full shadow-sm flex-shrink-0 overflow-hidden">
+      <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
+        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-black/5">
           <img
             src={
               review.reviewer?.profileImage ||
@@ -107,7 +109,7 @@ function ReviewCard({ review, onEdit, onDelete, user, delay = 0 }) {
               `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.fullName || review.name || 'User')}&background=random`
             }
             alt={review.reviewer?.fullName || review.name || 'User'}
-            className="w-10 h-10 rounded-full object-cover"
+            className="h-10 w-10 rounded-full object-cover"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.fullName || review.name || 'User')}&background=random`;
@@ -115,7 +117,7 @@ function ReviewCard({ review, onEdit, onDelete, user, delay = 0 }) {
           />
         </div>
         <div>
-          <p className="font-semibold text-gray-900 text-sm">
+          <p className="text-sm font-semibold text-[#0B1F1C]">
             {review.reviewer?.fullName || review.name}
           </p>
           <p className="text-xs text-gray-400">
@@ -164,7 +166,7 @@ function ReviewModal({ onClose, onSubmit, editingReview, user }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
@@ -172,45 +174,45 @@ function ReviewModal({ onClose, onSubmit, editingReview, user }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative"
+        className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl"
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-4 right-4 text-gray-400 transition-colors hover:text-gray-600"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </button>
 
         {done ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Star className="w-8 h-8 text-green-600 fill-green-600" />
+          <div className="py-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#E1F5EE]">
+              <Star className="h-8 w-8 fill-[#00564C] text-[#00564C]" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="mb-2 text-xl font-bold text-[#0B1F1C]">
               {editingReview ? "Review updated!" : "Thank you!"}
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="mb-6 text-gray-500">
               Your review has been {editingReview ? "updated" : "submitted"}.
             </p>
             <button
               onClick={onClose}
-              className="bg-[#00564C] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#027568] transition-colors"
+              className="rounded-xl bg-[#00564C] px-8 py-3 font-semibold text-white transition-colors hover:bg-[#027568]"
             >
               Close
             </button>
           </div>
         ) : (
           <>
-            <h3 className="text-xl font-bold text-gray-900 mb-1">
-              {editingReview ? "Edit Review" : "Leave Review"}
+            <h3 className="mb-1 text-xl font-bold text-[#0B1F1C]">
+              {editingReview ? "Edit review" : "Leave a review"}
             </h3>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="mb-6 text-sm text-gray-500">
               Share your experience with AfroTask
             </p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Rating
                 </label>
                 <StarRating
@@ -221,8 +223,8 @@ function ReviewModal({ onClose, onSubmit, editingReview, user }) {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Your Review
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Your review
                 </label>
                 <textarea
                   value={form.message}
@@ -232,22 +234,22 @@ function ReviewModal({ onClose, onSubmit, editingReview, user }) {
                   placeholder="Tell us about your experience..."
                   required
                   rows={4}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#00564C]/30 focus:border-[#00564C] transition resize-none"
+                  className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 transition focus:border-[#00564C] focus:outline-none focus:ring-2 focus:ring-[#00564C]/30"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-[#00564C] hover:bg-[#027568] text-white font-semibold py-3 rounded-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="rounded-xl bg-[#00564C] py-3 font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-[#027568] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting
                   ? editingReview
                     ? "Updating..."
                     : "Submitting..."
                   : editingReview
-                    ? "Update Review"
-                    : "Submit Review"}
+                    ? "Update review"
+                    : "Submit review"}
               </button>
             </form>
           </>
@@ -282,7 +284,7 @@ export default function AppReviews() {
   useEffect(() => {
     setLoadingReviews(true);
     const q = query(collection(db, "reviews"), limit(20));
-    
+
     const unsubscribe = onSnapshot(
       q,
       async (snap) => {
@@ -297,16 +299,22 @@ export default function AppReviews() {
             if (!val) return 0;
             if (typeof val.toDate === 'function') return val.toDate().getTime();
             if (val.seconds) return val.seconds * 1000;
-            return new Date(val).getTime() || 0; 
+            return new Date(val).getTime() || 0;
           };
 
-          const sortedReviews = [...rawReviews].sort((a, b) => {
-            return getTimestamp(b.createdAt) - getTimestamp(a.createdAt);
-          });
+          const sortedReviews = [...rawReviews]
+            .filter((r) => {
+              const text = (r.comment || r.message || "").trim();
+              // Require a real sentence: minimum length + at least one space (excludes gibberish like "hhjjghhhhh")
+              return text.length >= 15 && text.includes(" ");
+            })
+            .sort((a, b) => {
+              return getTimestamp(b.createdAt) - getTimestamp(a.createdAt);
+            });
 
           let userReview = null;
-          const currentUserId = user?.id || user?.uid || user?._id; 
-          
+          const currentUserId = user?.id || user?.uid || user?._id;
+
           if (currentUserId) {
             userReview = sortedReviews.find((r) => r.reviewerId === currentUserId);
           }
@@ -350,12 +358,12 @@ export default function AppReviews() {
                   };
                 }
               }
-              
+
               reviewer = usersCache.current[review.reviewerId];
               return { ...review, reviewer };
             })
           );
-          
+
           setReviews(reviewsWithReviewers);
           setError(null);
         } catch (err) {
@@ -377,7 +385,7 @@ export default function AppReviews() {
     );
 
     return () => unsubscribe();
-  }, [user]); 
+  }, [user]);
 
   const handleSubmitReview = async (form) => {
     if (!user?.id && !user?.uid && !user?._id) {
@@ -447,101 +455,101 @@ export default function AppReviews() {
       : "0.0";
 
   return (
-    <section className="relative py-20 md:py-28 overflow-hidden">
+    <section className="relative overflow-hidden bg-[#FBFAF7] py-20 md:py-28">
 
       {/* Background */}
       <div
-        className="absolute inset-0"
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 opacity-60"
         style={{
           background:
-            "linear-gradient(160deg, #f8fffe 0%, #f0faf8 40%, #fff8ee 100%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-5 pointer-events-none"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 80%, #00564C 0%, transparent 50%), radial-gradient(circle at 80% 20%, #FB9E01 0%, transparent 50%)",
+            "radial-gradient(60% 100% at 50% 0%, rgba(0,86,76,0.06) 0%, rgba(251,158,1,0.04) 45%, transparent 80%)",
         }}
       />
 
-      <div className="relative max-w-7xl mx-auto px-6">
+      <div className="relative mx-auto max-w-7xl px-6">
         {/* Header */}
         <motion.div
           ref={headerRef}
           initial={{ opacity: 0, y: 30 }}
           animate={headerInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center mb-14"
+          className="mb-14 text-center"
         >
-          <h2 className="text-base md:text-xl lg:text-2xl font-semibold text-gray-900 mb-2 md:mb-4">
+          <div className="mb-3 inline-flex items-center gap-2">
+            <span className="h-px w-6 bg-[#FB9E01]" />
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FB9E01]">
+              Testimonials
+            </p>
+            <span className="h-px w-6 bg-[#FB9E01]" />
+          </div>
+          <h2 className="mb-2 text-2xl font-bold tracking-tight text-[#0B1F1C] md:text-3xl">
             Trusted by freelancers and clients worldwide
           </h2>
-          <p className="text-gray-500 text-xs lg:text-sm max-w-xl mx-auto mb-3 md:mb-6">
+          <p className="mx-auto mb-6 max-w-xl text-sm text-gray-500 md:text-base">
             Real stories from real people building their future with AfroTask.
           </p>
 
           {/* Aggregate rating badge */}
-          <div className="inline-flex items-center gap-3 bg-white rounded-2xl md:px-6 p-3 md:py-3 shadow-md border border-gray-100">
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-black/[0.06] bg-white p-3 px-6 shadow-[0_1px_2px_rgba(16,24,22,0.04),0_12px_32px_-16px_rgba(16,24,22,0.10)]">
             <div className="flex gap-0.5">
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
                   key={s}
-                  className="md:w-5 w-3 h-3 md:h-5 text-[#FB9E01] fill-[#FB9E01]"
+                  className="h-4 w-4 text-[#FB9E01] fill-[#FB9E01] md:h-5 md:w-5"
                 />
               ))}
             </div>
-            <span className="font-bold text-gray-900 text-sm md:text-lg">{avgRating}</span>
-            <span className="text-gray-400 text-xs md:text-sm">
+            <span className="text-sm font-bold text-[#0B1F1C] md:text-lg">{avgRating}</span>
+            <span className="text-xs text-gray-400 md:text-sm">
               / 5 · {reviews.length} reviews
             </span>
           </div>
         </motion.div>
 
         {loadingReviews ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6 mb-10">
+          <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-3 lg:grid-cols-3">
             {Array(3)
               .fill()
               .map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-pulse h-64"
+                  className="h-64 animate-pulse rounded-2xl border border-black/[0.06] bg-white"
                 />
               ))}
           </div>
         ) : error ? (
 
-          <div className="col-span-full text-center py-12 rounded-2xl lg:p-8 p-6 bg-white mb-6 shadow-md">
-            <X className="lg:w-12 lg:h-12 w-10 h-10 mx-auto text-red-400 mb-4" />
-            <h3 className="lg:text-lg text-sm font-normal text-gray-900 mb-2">
+          <div className="col-span-full mb-6 rounded-2xl border border-black/[0.06] bg-white p-6 py-12 text-center shadow-sm lg:p-8">
+            <X className="mx-auto mb-4 h-10 w-10 text-red-400 lg:h-12 lg:w-12" />
+            <h3 className="mb-2 text-sm font-normal text-[#0B1F1C] lg:text-lg">
               Failed to load reviews
             </h3>
-            <button className="text-red-500 hover:text-red-300 mb-6" onClick={() => window.location.reload()}>
-              Refresh Page
+            <button className="mb-6 text-red-500 hover:text-red-400" onClick={() => window.location.reload()}>
+              Refresh page
             </button>
           </div>
 
         ) : reviews.length === 0 ? (
-          <div className="col-span-full text-center py-4">
-            <Star className="lg:w-12 w-8 h-8 lg:h-12 mx-auto text-gray-300 mb-4" />
-            <h3 className="lg:text-xl text-sm font-bold text-gray-900 mb-4">
-              No Reviews Yet
+          <div className="col-span-full py-4 text-center">
+            <Star className="mx-auto mb-4 h-8 w-8 text-gray-300 lg:h-12 lg:w-12" />
+            <h3 className="mb-4 text-sm font-bold text-[#0B1F1C] lg:text-xl">
+              No reviews yet
             </h3>
-            <p className="lg:text-sm text-xs text-gray-500 max-w-lg mx-auto mb-8">
+            <p className="mx-auto mb-8 max-w-lg text-xs text-gray-500 lg:text-sm">
               Be the first to share your experience!
               <br />
               Your feedback helps freelancers and clients worldwide.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6 mb-10">
+          <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-3 lg:grid-cols-3">
             {visibleReviews.map((review, i) => (
               <ReviewCard
                 key={review.id}
                 review={review}
                 onEdit={(review) => {
                   setEditingReview(review);
-                  setShowModal(true); 
+                  setShowModal(true);
                 }}
                 onDelete={handleDeleteReview}
                 user={user}
@@ -553,21 +561,21 @@ export default function AppReviews() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-4 mb-10">
+          <div className="mb-10 flex items-center justify-center gap-4">
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-all"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 transition-all hover:bg-gray-50 disabled:opacity-30"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
             </button>
             <div className="flex gap-2">
               {Array.from({ length: totalPages }).map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setPage(i)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    i === page ? "bg-[#00564C] scale-125" : "bg-gray-300"
+                  className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
+                    i === page ? "scale-125 bg-[#00564C]" : "bg-gray-300"
                   }`}
                 />
               ))}
@@ -575,9 +583,9 @@ export default function AppReviews() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page === totalPages - 1}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-all"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 transition-all hover:bg-gray-50 disabled:opacity-30"
             >
-              <ChevronRight className="w-5 h-5 text-gray-600" />
+              <ChevronRight className="h-5 w-5 text-gray-600" />
             </button>
           </div>
         )}
@@ -599,14 +607,14 @@ export default function AppReviews() {
               }
               setShowModal(true);
             }}
-            className={`font-semibold px-10 py-4 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg text-base inline-flex items-center gap-2 ${
+            className={`inline-flex items-center gap-2 rounded-xl px-10 py-4 text-base font-semibold shadow-lg transition-all duration-300 hover:scale-105 ${
               user
-                ? "bg-[#00564C] hover:bg-[#027568] text-white hover:shadow-xl"
-                : "bg-gray-200 text-gray-500 cursor-not-allowed hover:scale-100 shadow-none"
+                ? "bg-[#00564C] text-white hover:bg-[#027568] hover:shadow-xl"
+                : "cursor-not-allowed bg-gray-200 text-gray-500 shadow-none hover:scale-100"
             }`}
             title={!user ? "Log in to leave a review" : ""}
           >
-            {!user ? "SignUp Now" : "Leave a Review"}
+            {!user ? "Sign up now" : "Leave a review"}
           </button>
         </motion.div>
       </div>

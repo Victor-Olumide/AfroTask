@@ -1,10 +1,12 @@
 import { useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
   Briefcase, DollarSign, Clock, Video, ExternalLink,
   MessageSquare, Heart, Trash2, Eye, Pencil, X
 } from 'lucide-react';
-import Button from '../components/Button';
+import Sidebar from '../components/Sidebar';
+import Navbar from '../components/navbar/Navbar';
 import FreelancerAnalytics from '../components/FreelancerAnalytics';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -27,6 +29,7 @@ const emptyProjectForm = {
 
 const FreelancerDashboard = () => {
   const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [activeProjects, setActiveProjects] = useState([]);
@@ -36,7 +39,6 @@ const FreelancerDashboard = () => {
   const [loadingActiveProjects, setLoadingActiveProjects] = useState(true);
   const [loadingShowcase, setLoadingShowcase] = useState(true);
 
-  // Create/Edit project modal
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [projectForm, setProjectForm] = useState(emptyProjectForm);
@@ -44,21 +46,20 @@ const FreelancerDashboard = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // Service modal
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [serviceForm, setServiceForm] = useState({ title: '', description: '', price: '' });
 
   useEffect(() => {
     if (user?.id) {
       fetchProfileData();
-      setupRealTimeListeners();
+      const cleanup = setupRealTimeListeners();
+      return cleanup;
     }
   }, [user?.id]);
 
   const setupRealTimeListeners = () => {
     if (!user?.id) return;
 
-    // Posts listener
     const postsQuery = query(
       collection(db, 'posts'),
       where('authorId', '==', user.id),
@@ -69,7 +70,6 @@ const FreelancerDashboard = () => {
       setLoadingPosts(false);
     });
 
-    // Showcase projects listener (freelancer's created projects)
     const showcaseQuery = query(
       collection(db, 'projects'),
       where('freelancerId', '==', user.id),
@@ -95,7 +95,6 @@ const FreelancerDashboard = () => {
     }
   };
 
-  // Fetch active job-based projects
   useEffect(() => {
     if (!user?.id) return;
     setLoadingActiveProjects(true);
@@ -118,7 +117,6 @@ const FreelancerDashboard = () => {
     catch { toast.error('Failed to like post'); }
   };
 
-  // ── Service handlers ──────────────────────────────────────────────────────
   const handleSaveService = async () => {
     if (!serviceForm.title?.trim() || !serviceForm.description?.trim()) {
       toast.error('Please fill in title and description'); return;
@@ -148,7 +146,6 @@ const FreelancerDashboard = () => {
     } catch { toast.error('Failed to delete service'); }
   };
 
-  // ── Showcase project handlers ─────────────────────────────────────────────
   const openCreateProject = () => {
     setEditingProject(null);
     setProjectForm(emptyProjectForm);
@@ -202,8 +199,6 @@ const FreelancerDashboard = () => {
       if (image instanceof File) data.append('image', image);
 
       if (editingProject) {
-        // For edits, update via Firestore directly (admin bypass not needed for update if rules allow owner)
-        // Use backend endpoint with projectId
         await api.post(`/profile/showcase-projects?projectId=${editingProject.id}`, data, {
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (e) => {
@@ -244,334 +239,326 @@ const FreelancerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-700 to-green-500 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+          <div className="text-[#00564C] text-lg font-medium">Loading...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-700 to-green-500">
-      <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Afro Task</h1>
-          <Button onClick={logout} variant="outline">Logout</Button>
-        </div>
-      </nav>
+    <div className="flex min-h-screen bg-gray-50 dashboard-page">
+      <Sidebar />
 
-      <div className="max-w-7xl mx-auto p-8">
-        {/* Profile Header */}
-        <div className="glass rounded-3xl p-8 mb-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            {profileData?.profileImage ? (
-              <img
-                src={profileData.profileImage}
-                alt={profileData?.fullName}
-                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData?.fullName || 'User')}&size=200&background=10b981&color=fff`;
-                }}
-              />
-            ) : (
-              <div className="w-32 h-32 rounded-full bg-green-500 border-4 border-white flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-                {profileData?.fullName?.charAt(0)?.toUpperCase() || 'U'}
-              </div>
-            )}
-            <div className="flex-1">
-              <h2 className="text-3xl font-bold text-white mb-1">{profileData?.fullName || 'User'}</h2>
-              <p className="text-white/90 text-xl mb-2">{profileData?.professionalTitle || 'Freelancer'}</p>
-              <p className="text-white/80 text-sm mb-3">{profileData?.email}</p>
-              <div className="flex flex-wrap gap-3 mb-4">
-                {profileData?.yearsOfExperience && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/20 text-white rounded-full text-sm">
-                    <Briefcase className="w-4 h-4" />{profileData.yearsOfExperience} years exp
-                  </span>
-                )}
-                {profileData?.availability && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/20 text-white rounded-full text-sm">
-                    <Clock className="w-4 h-4" />{profileData.availability}
-                  </span>
-                )}
-                {profileData?.hourlyRate && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/20 text-white rounded-full text-sm">
-                    <DollarSign className="w-4 h-4" />${profileData.hourlyRate}/hr
-                  </span>
-                )}
-              </div>
-              {profileData?.bio && (
-                <p className="text-white/90 text-sm leading-relaxed mb-4">{profileData.bio}</p>
-              )}
-              {profileData?.socialLinks && (
-                <div className="flex flex-wrap gap-2">
-                  {profileData.socialLinks.linkedin && (
-                    <a href={profileData.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">
-                      <ExternalLink className="w-3 h-3" />LinkedIn
-                    </a>
-                  )}
-                  {profileData.socialLinks.github && (
-                    <a href={profileData.socialLinks.github} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-gray-800 hover:bg-gray-900 text-white rounded-lg text-sm transition">
-                      <ExternalLink className="w-3 h-3" />GitHub
-                    </a>
-                  )}
-                  {profileData.socialLinks.portfolio && (
-                    <a href={profileData.socialLinks.portfolio} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition">
-                      <ExternalLink className="w-3 h-3" />Portfolio
-                    </a>
-                  )}
+      <div className="flex-1 lg:ml-64">
+        <Navbar />
+
+        <div className="max-w-6xl mx-auto p-4 lg:p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8 mb-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              {profileData?.profileImage ? (
+                <img
+                  src={profileData.profileImage}
+                  alt={profileData?.fullName}
+                  className="w-32 h-32 rounded-full object-cover border-4 border-[#00564C]/10 shadow-sm"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData?.fullName || 'User')}&size=200&background=00564C&color=fff`;
+                  }}
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-[#00564C] border-4 border-[#00564C]/10 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+                  {profileData?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Analytics */}
-        <div className="mb-6">
-          <FreelancerAnalytics userId={user?.id} />
-        </div>
-
-        {/* Skills */}
-        {profileData?.skills?.length > 0 && (
-          <div className="glass rounded-2xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-white mb-4">Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {profileData.skills.map((skill, i) => (
-                <span key={i} className="px-4 py-2 bg-white/20 text-white rounded-full text-sm font-medium">{skill}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Languages */}
-        {profileData?.languages?.length > 0 && (
-          <div className="glass rounded-2xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-white mb-4">Languages</h3>
-            <div className="flex flex-wrap gap-2">
-              {profileData.languages.map((lang, i) => (
-                <span key={i} className="px-4 py-2 bg-white/20 text-white rounded-full text-sm">{lang}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Intro Video */}
-        {profileData?.introVideoUrl && (
-          <div className="glass rounded-2xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Video className="w-6 h-6" />Introduction Video
-            </h3>
-            <video src={profileData.introVideoUrl} controls className="w-full max-h-96 rounded-lg" />
-          </div>
-        )}
-
-        {/* ── Showcase Projects (Portfolio) ─────────────────────────────── */}
-        <div className="glass rounded-2xl p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-white">My Projects</h3>
-            <button
-              onClick={openCreateProject}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm transition"
-            >
-              + Create Project
-            </button>
-          </div>
-
-          {loadingShowcase ? (
-            <p className="text-white/70 text-center py-8">Loading projects...</p>
-          ) : showcaseProjects.length === 0 ? (
-            <p className="text-white/70 text-center py-8">No projects yet. Create your first project to showcase your work!</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {showcaseProjects.map((project) => (
-                <div key={project.id} className="bg-white/10 rounded-xl overflow-hidden">
-                  {project.projectImage ? (
-                    <img src={project.projectImage} alt={project.title} className="w-full h-48 object-cover" />
-                  ) : (
-                    <div className="w-full h-48 bg-green-200/20 flex items-center justify-center">
-                      <Briefcase className="w-16 h-16 text-white/30" />
-                    </div>
+              <div className="flex-1">
+                <h2 className="text-3xl font-bold text-gray-900 mb-1">{profileData?.fullName || 'User'}</h2>
+                <p className="text-[#00564C] text-xl font-medium mb-2">{profileData?.professionalTitle || 'Freelancer'}</p>
+                <p className="text-gray-500 text-sm mb-3">{profileData?.email}</p>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {profileData?.yearsOfExperience && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#00564C]/10 text-[#00564C] rounded-full text-sm font-medium">
+                      <Briefcase className="w-4 h-4" />{profileData.yearsOfExperience} years exp
+                    </span>
                   )}
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold text-white">{project.title}</h4>
-                      <span className="text-xs px-2 py-1 bg-white/20 text-white rounded-full ml-2 shrink-0">{project.category}</span>
-                    </div>
-                    <p className="text-white/80 text-sm mb-3 line-clamp-2">{project.description}</p>
-                    {project.technologies?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {project.technologies.map((t, i) => (
-                          <span key={i} className="text-xs px-2 py-0.5 bg-white/10 text-white/80 rounded">{t}</span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-4 text-white/60 text-xs mb-3">
-                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{project.views || 0}</span>
-                      <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{project.likes || 0}</span>
-                      {project.createdAt && (
-                        <span>{new Date(project.createdAt.seconds * 1000).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                    {project.projectLink && (
-                      <a href={project.projectLink} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-white/80 hover:text-white text-sm mb-3 transition">
-                        <ExternalLink className="w-4 h-4" />View Project
+                  {profileData?.availability && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#00564C]/10 text-[#00564C] rounded-full text-sm font-medium">
+                      <Clock className="w-4 h-4" />{profileData.availability}
+                    </span>
+                  )}
+                  {profileData?.hourlyRate && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#FB9E01]/10 text-[#CC8102] rounded-full text-sm font-medium">
+                      <DollarSign className="w-4 h-4" />${profileData.hourlyRate}/hr
+                    </span>
+                  )}
+                </div>
+                {profileData?.bio && (
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">{profileData.bio}</p>
+                )}
+                {profileData?.socialLinks && (
+                  <div className="flex flex-wrap gap-2">
+                    {profileData.socialLinks.linkedin && (
+                      <a href={profileData.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium transition">
+                        <ExternalLink className="w-3 h-3" />LinkedIn
                       </a>
                     )}
-                    <div className="flex gap-2">
-                      <button onClick={() => openEditProject(project)}
-                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm transition">
-                        <Pencil className="w-4 h-4" />Edit
-                      </button>
-                      <button onClick={() => handleDeleteProject(project.id)}
-                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition">
-                        <Trash2 className="w-4 h-4" />Delete
-                      </button>
-                    </div>
+                    {profileData.socialLinks.github && (
+                      <a href={profileData.socialLinks.github} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-medium transition">
+                        <ExternalLink className="w-3 h-3" />GitHub
+                      </a>
+                    )}
+                    {profileData.socialLinks.portfolio && (
+                      <a href={profileData.socialLinks.portfolio} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-sm font-medium transition">
+                        <ExternalLink className="w-3 h-3" />Portfolio
+                      </a>
+                    )}
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Services */}
-        <div className="glass rounded-2xl p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-white">Services</h3>
-            <button onClick={() => { setServiceForm({ title: '', description: '', price: '' }); setShowServiceModal(true); }}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm transition">
-              + Add Service
-            </button>
           </div>
-          {profileData?.services?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {profileData.services.map((service, i) => (
-                <div key={i} className="bg-white/10 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold text-white">{service.title}</h4>
-                    {service.price && <span className="text-white/90 font-medium">{service.price}</span>}
-                  </div>
-                  <p className="text-white/80 text-sm mb-3">{service.description}</p>
-                  <button onClick={() => handleDeleteService(i)}
-                    className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition">
-                    Delete Service
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-white/70 text-center py-4">No services listed yet.</p>
-          )}
-        </div>
 
-        {/* Active Job Projects */}
-        <div className="glass rounded-2xl p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-white">Active Jobs</h3>
+          <div className="mb-6">
+            <FreelancerAnalytics userId={user?.id} />
           </div>
-          {loadingActiveProjects ? (
-            <p className="text-white/70 text-center py-8">Loading...</p>
-          ) : activeProjects.length === 0 ? (
-            <p className="text-white/70 text-center py-8">No active jobs yet. Start applying!</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeProjects.map((project) => (
-                <div key={project.id} className="bg-white/10 rounded-xl p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-white mb-1">{project.job?.title || 'Project'}</h4>
-                      <p className="text-white/70 text-sm line-clamp-2">{project.job?.description}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ml-2 ${
-                      project.status === 'completed' ? 'bg-green-500/20 text-green-300'
-                      : project.status === 'awaiting_confirmation' ? 'bg-yellow-500/20 text-yellow-300'
-                      : 'bg-blue-500/20 text-blue-300'
-                    }`}>
-                      {project.status === 'awaiting_confirmation' ? 'Pending' : project.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-white/60 mb-3">
-                    <span className="flex items-center gap-1"><DollarSign className="w-4 h-4" />{project.job?.budget || 'N/A'}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{new Date(project.startedAt).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center gap-3 pt-3 border-t border-white/10">
-                    <img
-                      src={project.client?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(project.client?.fullName || 'Client')}`}
-                      alt={project.client?.fullName} className="w-8 h-8 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <p className="text-white text-sm font-medium">{project.client?.fullName}</p>
-                      <p className="text-white/60 text-xs">{project.client?.companyName || 'Client'}</p>
-                    </div>
-                    <button onClick={() => window.location.href = `/project/${project.id}`}
-                      className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-sm rounded transition">
-                      View
-                    </button>
-                  </div>
-                </div>
-              ))}
+
+          {profileData?.skills?.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Skills</h3>
+              <div className="flex flex-wrap gap-2">
+                {profileData.skills.map((skill, i) => (
+                  <span key={i} className="px-4 py-2 bg-[#00564C]/10 text-[#00564C] rounded-full text-sm font-medium">{skill}</span>
+                ))}
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Posts */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-4">Posts</h3>
-          {loadingPosts ? (
-            <p className="text-white/70 text-center py-8">Loading posts...</p>
-          ) : posts.length === 0 ? (
-            <p className="text-white/70 text-center py-8">No posts yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <div key={post.id} className="bg-white/10 rounded-xl p-4">
-                  <div className="flex items-start gap-3 mb-3">
-                    <img
-                      src={post.author?.profileImage || `https://ui-avatars.com/api/?name=${post.author?.fullName}`}
-                      alt={post.author?.fullName} className="w-10 h-10 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <p className="text-white font-medium">{post.author?.fullName}</p>
-                      <p className="text-white/60 text-xs">{new Date(post.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <button onClick={() => handleDeletePost(post.id)} className="text-red-400 hover:text-red-300 transition">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                  {post.content && <p className="text-white mb-3">{post.content}</p>}
-                  {post.mediaUrl && (
-                    <div className="mb-3">
-                      {post.type === 'video' || post.mediaType === 'video' ? (
-                        <video src={post.mediaUrl} controls className="w-full rounded-lg max-h-96" />
-                      ) : (
-                        <img src={post.mediaUrl} alt="Post media" className="w-full rounded-lg" />
+          {profileData?.languages?.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Languages</h3>
+              <div className="flex flex-wrap gap-2">
+                {profileData.languages.map((lang, i) => (
+                  <span key={i} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">{lang}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {profileData?.introVideoUrl && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Video className="w-6 h-6 text-[#00564C]" />Introduction Video
+              </h3>
+              <video src={profileData.introVideoUrl} controls className="w-full max-h-96 rounded-xl" />
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">My Projects</h3>
+              <button
+                onClick={openCreateProject}
+                className="px-4 py-2 bg-[#00564C] hover:bg-[#027568] text-white rounded-lg text-sm font-medium transition"
+              >
+                + Create Project
+              </button>
+            </div>
+
+            {loadingShowcase ? (
+              <p className="text-gray-400 text-center py-8">Loading projects...</p>
+            ) : showcaseProjects.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">No projects yet. Create your first project to showcase your work!</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {showcaseProjects.map((project) => (
+                  <div key={project.id} className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-300">
+                    {project.projectImage ? (
+                      <img src={project.projectImage} alt={project.title} className="w-full h-48 object-cover" />
+                    ) : (
+                      <div className="w-full h-48 bg-[#00564C]/5 flex items-center justify-center">
+                        <Briefcase className="w-16 h-16 text-[#00564C]/20" />
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">{project.title}</h4>
+                        <span className="text-xs px-2 py-1 bg-[#00564C]/10 text-[#00564C] rounded-full ml-2 shrink-0 font-medium">{project.category}</span>
+                      </div>
+                      <p className="text-gray-500 text-sm mb-3 line-clamp-2">{project.description}</p>
+                      {project.technologies?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {project.technologies.map((t, i) => (
+                            <span key={i} className="text-xs px-2 py-0.5 bg-white border border-gray-200 text-gray-600 rounded">{t}</span>
+                          ))}
+                        </div>
                       )}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-4 text-white/70 text-sm">
-                    <button onClick={() => handleLikePost(post.id)}
-                      className={`flex items-center gap-1 hover:text-white transition ${post.likes?.includes(user.id) ? 'text-red-400' : ''}`}>
-                      <Heart className="w-5 h-5" fill={post.likes?.includes(user.id) ? 'currentColor' : 'none'} />
-                      <span>{post.likes?.length || 0}</span>
-                    </button>
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="w-5 h-5" /><span>{post.commentsCount || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-5 h-5" /><span>{post.views || 0} views</span>
+                      <div className="flex items-center gap-4 text-gray-400 text-xs mb-3">
+                        <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{project.views || 0}</span>
+                        <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{project.likes || 0}</span>
+                        {project.createdAt && (
+                          <span>{new Date(project.createdAt.seconds * 1000).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                      {project.projectLink && (
+                        <a href={project.projectLink} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[#00564C] hover:underline text-sm mb-3 transition">
+                          <ExternalLink className="w-4 h-4" />View Project
+                        </a>
+                      )}
+                      <div className="flex gap-2">
+                        <button onClick={() => openEditProject(project)}
+                          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition">
+                          <Pencil className="w-4 h-4" />Edit
+                        </button>
+                        <button onClick={() => handleDeleteProject(project.id)}
+                          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium transition">
+                          <Trash2 className="w-4 h-4" />Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Services</h3>
+              <button onClick={() => { setServiceForm({ title: '', description: '', price: '' }); setShowServiceModal(true); }}
+                className="px-4 py-2 bg-[#00564C] hover:bg-[#027568] text-white rounded-lg text-sm font-medium transition">
+                + Add Service
+              </button>
             </div>
-          )}
+            {profileData?.services?.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {profileData.services.map((service, i) => (
+                  <div key={i} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-gray-900">{service.title}</h4>
+                      {service.price && <span className="text-[#00564C] font-semibold">{service.price}</span>}
+                    </div>
+                    <p className="text-gray-500 text-sm mb-3">{service.description}</p>
+                    <button onClick={() => handleDeleteService(i)}
+                      className="w-full px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium transition">
+                      Delete Service
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-center py-4">No services listed yet.</p>
+            )}
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Active Jobs</h3>
+            </div>
+            {loadingActiveProjects ? (
+              <p className="text-gray-400 text-center py-8">Loading...</p>
+            ) : activeProjects.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">No active jobs yet. Start applying!</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activeProjects.map((project) => (
+                  <div key={project.id} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 mb-1">{project.job?.title || 'Project'}</h4>
+                        <p className="text-gray-500 text-sm line-clamp-2">{project.job?.description}</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ml-2 ${
+                        project.status === 'completed' ? 'bg-green-50 text-green-700'
+                        : project.status === 'awaiting_confirmation' ? 'bg-amber-50 text-amber-700'
+                        : 'bg-blue-50 text-blue-700'
+                      }`}>
+                        {project.status === 'awaiting_confirmation' ? 'Pending' : project.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                      <span className="flex items-center gap-1"><DollarSign className="w-4 h-4" />{project.job?.budget || 'N/A'}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{new Date(project.startedAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                      <img
+                        src={project.client?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(project.client?.fullName || 'Client')}`}
+                        alt={project.client?.fullName} className="w-8 h-8 rounded-full"
+                      />
+                      <div className="flex-1">
+                        <p className="text-gray-900 text-sm font-medium">{project.client?.fullName}</p>
+                        <p className="text-gray-400 text-xs">{project.client?.companyName || 'Client'}</p>
+                      </div>
+                      <button onClick={() => navigate(`/project/${project.id}`)}
+                        className="px-3 py-1 bg-[#00564C]/10 hover:bg-[#00564C]/20 text-[#00564C] text-sm rounded-lg font-medium transition">
+                        View
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Posts</h3>
+            {loadingPosts ? (
+              <p className="text-gray-400 text-center py-8">Loading posts...</p>
+            ) : posts.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">No posts yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post) => (
+                  <div key={post.id} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <img
+                        src={post.author?.profileImage || `https://ui-avatars.com/api/?name=${post.author?.fullName}`}
+                        alt={post.author?.fullName} className="w-10 h-10 rounded-full"
+                      />
+                      <div className="flex-1">
+                        <p className="text-gray-900 font-medium">{post.author?.fullName}</p>
+                        <p className="text-gray-400 text-xs">{new Date(post.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <button onClick={() => handleDeletePost(post.id)} className="text-red-400 hover:text-red-600 transition">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                    {post.content && <p className="text-gray-800 mb-3">{post.content}</p>}
+                    {post.mediaUrl && (
+                      <div className="mb-3">
+                        {post.type === 'video' || post.mediaType === 'video' ? (
+                          <video src={post.mediaUrl} controls className="w-full rounded-lg max-h-96" />
+                        ) : (
+                          <img src={post.mediaUrl} alt="Post media" className="w-full rounded-lg" />
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4 text-gray-500 text-sm">
+                      <button onClick={() => handleLikePost(post.id)}
+                        className={`flex items-center gap-1 hover:text-[#00564C] transition ${post.likes?.includes(user.id) ? 'text-red-500' : ''}`}>
+                        <Heart className="w-5 h-5" fill={post.likes?.includes(user.id) ? 'currentColor' : 'none'} />
+                        <span>{post.likes?.length || 0}</span>
+                      </button>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-5 h-5" /><span>{post.commentsCount || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-5 h-5" /><span>{post.views || 0} views</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── Create / Edit Project Modal ──────────────────────────────────── */}
       {showProjectModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -585,7 +572,6 @@ const FreelancerDashboard = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
                 <input type="text" value={projectForm.title}
@@ -594,7 +580,6 @@ const FreelancerDashboard = () => {
                   placeholder="e.g., E-commerce Website" />
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Description *</label>
                 <textarea value={projectForm.description}
@@ -604,7 +589,6 @@ const FreelancerDashboard = () => {
                   placeholder="Describe what you built, the problem it solves, and your role..." />
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
                 <select value={projectForm.category}
@@ -617,7 +601,6 @@ const FreelancerDashboard = () => {
                 </select>
               </div>
 
-              {/* Custom category if Others */}
               {projectForm.category === 'Others' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Custom Category *</label>
@@ -628,7 +611,6 @@ const FreelancerDashboard = () => {
                 </div>
               )}
 
-              {/* Project Image */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Image *</label>
                 <input type="file" accept="image/*" onChange={handleImageChange}
@@ -646,7 +628,6 @@ const FreelancerDashboard = () => {
                 )}
               </div>
 
-              {/* Project Link */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Link</label>
                 <input type="url" value={projectForm.projectLink}
@@ -655,7 +636,6 @@ const FreelancerDashboard = () => {
                   placeholder="https://github.com/... or live URL" />
               </div>
 
-              {/* Technologies */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Technologies Used</label>
                 <input type="text" value={projectForm.technologies}
@@ -664,7 +644,6 @@ const FreelancerDashboard = () => {
                   placeholder="React, Node.js, MongoDB (comma separated)" />
               </div>
 
-              {/* Completion Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Completion Date</label>
                 <input type="date" value={projectForm.completionDate}
@@ -687,7 +666,6 @@ const FreelancerDashboard = () => {
         </div>
       )}
 
-      {/* Service Modal */}
       {showServiceModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 md:p-8 max-w-lg w-full">

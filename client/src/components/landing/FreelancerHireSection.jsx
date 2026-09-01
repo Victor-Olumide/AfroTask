@@ -48,95 +48,86 @@ export default function FreelancerHireSection() {
     if (category === "All") {
       setFilteredFreelancers(allFreelancers);
     } else if (category === "Others") {
-      // For "Others", show freelancers that don't match any of the specific categories
       const specificCategories = CATEGORIES.filter(cat => cat !== "All" && cat !== "Others");
       const filtered = allFreelancers.filter((freelancer) => {
         const skillCategory = freelancer.skillCategory?.toLowerCase() || '';
         const professionalTitle = freelancer.professionalTitle?.toLowerCase() || '';
         const skills = freelancer.skills || [];
-        
-        // Check if this freelancer has any data that could match categories
+
         const hasCategoryData = skillCategory || professionalTitle || skills.length > 0;
-        
+
         if (!hasCategoryData) {
-          // If freelancer has no category data, include in "Others"
           return true;
         }
-        
-        // Check if this freelancer matches ANY of the specific categories
+
         const matchesAnySpecificCategory = specificCategories.some(specificCat => {
           const matchesCategory = skillCategory === specificCat.toLowerCase();
           const matchesTitle = professionalTitle.includes(specificCat.toLowerCase());
-          const matchesSkills = skills.some(skill => 
+          const matchesSkills = skills.some(skill =>
             skill.toLowerCase().includes(specificCat.toLowerCase())
           );
           return matchesCategory || matchesTitle || matchesSkills;
         });
-        
-        // Include in "Others" if it doesn't match any specific category
+
         return !matchesAnySpecificCategory;
       });
-      console.log(`Filtered ${filtered.length} freelancers for "Others" category`);
       setFilteredFreelancers(filtered);
     } else {
       const filtered = allFreelancers.filter((freelancer) => {
         const skillCategory = freelancer.skillCategory?.toLowerCase() || '';
         const professionalTitle = freelancer.professionalTitle?.toLowerCase() || '';
         const skills = freelancer.skills || [];
-        
-        // Check if category matches skill category, title, or any skill
+
         const matchesCategory = skillCategory === category.toLowerCase();
         const matchesTitle = professionalTitle.includes(category.toLowerCase());
-        const matchesSkills = skills.some(skill => 
+        const matchesSkills = skills.some(skill =>
           skill.toLowerCase().includes(category.toLowerCase())
         );
-        
-        const matches = matchesCategory || matchesTitle || matchesSkills;
-        
-        // Debug logging
-        if (matches) {
-          console.log(`Freelancer ${freelancer.fullName} matches ${category}:`, {
-            skillCategory: freelancer.skillCategory,
-            professionalTitle: freelancer.professionalTitle,
-            skills: freelancer.skills,
-            matchesCategory,
-            matchesTitle,
-            matchesSkills
-          });
-        }
-        
-        return matches;
+
+        return matchesCategory || matchesTitle || matchesSkills;
       });
-      console.log(`Filtered ${filtered.length} freelancers for category: ${category}`);
       setFilteredFreelancers(filtered);
     }
   };
 
   return (
-    <div className="text-black">
-      <div className="flex items-center justify-center flex-col gap-1 mb-6 md:mb-10 px-2">
-        <h1 className="text-sm md:text-xl lg:text-2xl font-semibold tracking-wider text-center">
-          Hire a Freelancer
-        </h1>
+    <div className="relative overflow-hidden bg-[#FBFAF7] px-4 py-16 md:px-8 md:py-24">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-56 opacity-60"
+        style={{
+          background:
+            "radial-gradient(60% 100% at 50% 0%, rgba(0,86,76,0.06) 0%, rgba(251,158,1,0.04) 45%, transparent 80%)",
+        }}
+      />
 
-        <h2 className="flex flex-col md:flex-row text-xs md:text-base font-thin text-center">
-          <span className="md:ml-2">Find the right talent.</span>
-          <span className="md:ml-2">Start your project.</span>
-          <span className="md:ml-2">Watch your vision come alive.</span>
+      <div className="relative mx-auto mb-10 max-w-xl text-center">
+        <div className="mb-3 inline-flex items-center gap-2">
+          <span className="h-px w-6 bg-[#FB9E01]" />
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FB9E01]">
+            Top talent
+          </p>
+          <span className="h-px w-6 bg-[#FB9E01]" />
+        </div>
+        <h2 className="mb-2 text-2xl font-bold tracking-tight text-[#0B1F1C] md:text-3xl">
+          Hire a freelancer
         </h2>
+        <p className="text-sm text-gray-500 md:text-base">
+          Find the right talent. Start your project. Watch your vision come alive.
+        </p>
       </div>
 
-      <div className=" w-screen px-6">
-      {/* Category Filter Buttons */}
-      <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth -webkit-overflow-scrolling-touch w-full max-w-5xl mx-auto md:px-4 md:py-2 gap-x-2 mb-8 md:!grid md:grid-cols-5 lg:!grid-cols-7 md:gap-4 md:overflow-visible md:max-w-none px-0 lg:px-12 md:p-0">
+      <div
+        className="relative mx-auto mb-10 flex max-w-5xl gap-2 overflow-x-auto pb-1"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
         {CATEGORIES.map((category) => (
           <button
             key={category}
             onClick={() => handleCategoryFilter(category)}
-            className={`min-w-[80px] px-2 py-2 lg:px-3 text-[10px] lg:text-xs xl:text-xs font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 rounded-lg ${
+            className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 md:text-sm ${
               activeCategory === category
-                ? "bg-[#00564c] text-white shadow-lg shadow-blue-500/25"
-                : "bg-white/80 backdrop-blur-sm h-8 md:h-12 hover:bg-white border border-gray-300 hover:shadow-md text-gray-800"
+                ? "border-[#00564C] bg-[#00564C] text-white shadow-sm"
+                : "border-gray-200 bg-white text-gray-600 hover:border-[#00564C]/40 hover:text-[#00564C]"
             }`}
           >
             {category}
@@ -144,51 +135,44 @@ export default function FreelancerHireSection() {
         ))}
       </div>
 
-      {/* Freelancer cards container */}
-        <div className="grid xl:grid-cols-6 lg:grid-cols-5 md:grid-cols-4 sm:grid-cols-4 grid-cols-3 justify-center lg:gap-6 md:gap-4 gap-2 px-1 md:px-6 mx-auto max-w-7xl">
-          {loading ? (
-            Array(12)
-              .fill()
-              .map((_, index) => (
-                <div
-                  key={`skeleton-${index}`}
-                  className="w-full aspect-[3/4] bg-gray-200 animate-pulse rounded-xl shadow-lg"
-                ></div>
-              ))
-          ) : filteredFreelancers.length === 0 ? (
-            <div className="col-span-full text-gray-500 flex justify-center items-center h-96 text-center">
-              <div>
-                <p className="text-lg font-medium mb-2">No freelancers found for this category</p>
-                <p className="text-sm">Try selecting a different category or check back later</p>
-              </div>
-            </div>
-          ) : (
-            filteredFreelancers.map((freelancer) => (
+      <div className="relative mx-auto grid max-w-7xl grid-cols-2 gap-4 sm:grid-cols-3 md:gap-5 lg:grid-cols-4 xl:grid-cols-6">
+        {loading ? (
+          Array(12)
+            .fill()
+            .map((_, index) => (
               <div
-                key={freelancer.uid || freelancer.id}
-                className="w-full"
-              >
-                <FreelancerCard
-                  userId={freelancer.uid || freelancer.id}
-                  name={freelancer.fullName || "Unknown"}
-                  title={
-                    freelancer.professionalTitle ||
-                    freelancer.skillCategory ||
-                    "Skilled Professional"
-                  }
-                  rating={freelancer.averageRating || 0}
-                  reviews={freelancer.totalReviews || 0}
-                  hourlyRate={freelancer.hourlyRate || "Negotiable"}
-                  image={
-                    freelancer.profileImage ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(freelancer.fullName || "User")}`
-                  }
-                  className="w-full max-w-[200px] mx-auto"
-                />
-              </div>
+                key={`skeleton-${index}`}
+                className="aspect-[3/4.2] animate-pulse rounded-2xl bg-gray-100"
+              />
             ))
-          )}
-        </div>
+        ) : filteredFreelancers.length === 0 ? (
+          <div className="col-span-full flex h-72 items-center justify-center text-center text-gray-500">
+            <div>
+              <p className="mb-1 text-base font-medium">No freelancers found for this category</p>
+              <p className="text-sm text-gray-400">Try a different category or check back later</p>
+            </div>
+          </div>
+        ) : (
+          filteredFreelancers.map((freelancer) => (
+            <FreelancerCard
+              key={freelancer.uid || freelancer.id}
+              userId={freelancer.uid || freelancer.id}
+              name={freelancer.fullName || "Unknown"}
+              title={
+                freelancer.professionalTitle ||
+                freelancer.skillCategory ||
+                "Skilled Professional"
+              }
+              rating={freelancer.averageRating || 0}
+              reviews={freelancer.totalReviews || 0}
+              hourlyRate={freelancer.hourlyRate || "Negotiable"}
+              image={
+                freelancer.profileImage ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(freelancer.fullName || "User")}`
+              }
+            />
+          ))
+        )}
       </div>
     </div>
   );

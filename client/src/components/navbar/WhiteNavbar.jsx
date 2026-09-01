@@ -104,7 +104,7 @@ const WhiteNavbar = () => {
   const pathname = location.pathname;
 
   return (
-    <nav className="bg-white text-black py-4 px-6 shadow-lg relative z-50">
+    <nav className="bg-white text-black py-4 px-6 shadow-lg fixed top-0 left-0 w-full z-50">
       {/* Desktop Navbar */}
       <div className="hidden md:flex w-full mx-auto flex-row justify-between text-sm font-medium items-center">
         {/* Left: Logo */}

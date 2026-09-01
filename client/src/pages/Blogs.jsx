@@ -18,10 +18,10 @@ function Toast({ message, type = 'success', onClose }) {
     return () => clearTimeout(t)
   }, [onClose])
   return (
-    <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl text-white text-sm font-medium transition-all
+    <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 rounded-xl px-5 py-4 text-sm font-medium text-white shadow-2xl transition-all
       ${type === 'success' ? 'bg-[#00564C]' : 'bg-red-600'}`}>
       {type === 'success' ? '✅' : '❌'} {message}
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100"><X className="w-4 h-4" /></button>
+      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100"><X className="h-4 w-4" /></button>
     </div>
   )
 }
@@ -81,13 +81,13 @@ export default function Blogs() {
 
   const filteredSuggestions = useMemo(() => {
     if (!searchTerm.trim()) return []
-    
+
     // Get unique blog titles that match the search term
     const matchedBlogs = allBlogs.filter(blog =>
       blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       blog.description.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    
+
     // Extract and deduplicate titles
     const uniqueTitles = [...new Set(matchedBlogs.map(b => b.title))]
     return uniqueTitles.slice(0, 6) // Show top 6 matching blogs
@@ -137,7 +137,7 @@ export default function Blogs() {
       data.append('description', form.description.trim())
       data.append('content', form.content.trim())
       data.append('authorName', user.fullName || user.name || 'Anonymous')
-      
+
       if (imageFile) {
         console.log('Image file being uploaded:', { name: imageFile.name, size: imageFile.size, type: imageFile.type })
         data.append('image', imageFile)
@@ -174,222 +174,210 @@ export default function Blogs() {
       await api.delete(`/profile/blogs/${blog.id}`)
       showToast('Blog deleted.')
       await fetchBlogs()
-      // Modal removed
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to delete blog', 'error')
     }
   }
 
   return (
-    <div className='min-h-screen bg-[#00564C] relative text-black'>
+    <div className="relative min-h-screen bg-[#FBFAF7] text-gray-900">
       <WhiteNavbar />
-      <WhyAfroTaskBoard />
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* Search + Create button row */}
-      <div className='flex flex-col gap-4 justify-center items-center text-white my-8 px-4 sm:px-8 relative'>
-        <div className="w-full max-w-2xl flex gap-3 items-center">
-          <div className="relative flex-1">
-            <IoSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-gray-400 pointer-events-none" />
-            <input
-              type='text'
-              placeholder="Search blogs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setTimeout(() => setInputFocused(false), 200)}
-              className='w-full bg-white pl-12 pr-12 text-gray-900 rounded-2xl text-sm md:py-4 p-2 border-2 border-gray-300 focus:border-green-500 focus:outline-none shadow-lg'
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <IoClose className="text-xl" />
-              </button>
-            )}
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden pb-16 pt-16 md:pb-20 md:pt-20">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-80 opacity-60"
+          style={{
+            background:
+              "radial-gradient(60% 100% at 50% 0%, rgba(0,86,76,0.07) 0%, rgba(251,158,1,0.05) 45%, transparent 80%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-3xl px-6 text-center">
+          <div className="mb-5 inline-flex items-center gap-2">
+            <span className="h-px w-6 bg-[#FB9E01]" />
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FB9E01]">
+              Our blog
+            </p>
+            <span className="h-px w-6 bg-[#FB9E01]" />
           </div>
-          {/* <button
-            onClick={openCreate}
-            className="bg-white text-[#00564C] font-semibold px-5 py-4 rounded-2xl hover:bg-green-50 transition whitespace-nowrap shadow-lg"
-          >
-            + Create Blog
-          </button> */}
+          <h1 className="mb-5 text-4xl font-bold leading-tight tracking-tight text-[#0B1F1C] md:text-5xl">
+            Insights on the <span className="text-[#00564C]">freelance</span> economy.
+          </h1>
+          <p className="mx-auto max-w-xl text-base leading-relaxed text-gray-500 md:text-lg">
+            Thoughts, tutorials, and stories from the AfroTask team on how to build, scale, and work in the modern gig economy.
+          </p>
         </div>
+      </section>
 
-        {inputFocused && (
-          <>
-            {filteredSuggestions.length > 0 && (
-              <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl absolute top-24 z-10 max-h-64 overflow-y-auto">
-                {filteredSuggestions.map((sug, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setSearchTerm(sug)
-                      setInputFocused(false)
-                    }}
-                    className='flex items-center gap-3 py-3 px-6 text-base text-gray-900 hover:bg-gray-100 focus:outline-none transition-colors border-l-4 border-transparent hover:border-green-500 w-full text-left'
-                  >
-                    <IoSearch className="text-lg text-gray-400 flex-shrink-0" />
-                    <span className="truncate">{sug}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {searchTerm.trim() && filteredSuggestions.length === 0 && (
-              <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl absolute top-24 z-10">
-                <div className="py-4 px-6 text-gray-500 text-center">
-                  No blogs match &quot;{searchTerm}&quot;
+      {/* ── Search ── */}
+      <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 sm:px-8">
+        <div className="relative w-full">
+          <IoSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search posts..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setTimeout(() => setInputFocused(false), 200)}
+            className="w-full rounded-2xl border border-black/[0.08] bg-white p-4 pl-12 pr-12 text-sm text-gray-900 shadow-[0_1px_2px_rgba(16,24,22,0.04),0_12px_32px_-16px_rgba(16,24,22,0.10)] transition focus:border-[#00564C]/40 focus:outline-none focus:ring-2 focus:ring-[#00564C]/20"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <IoClose className="text-xl" />
+            </button>
+          )}
+
+          {inputFocused && (
+            <>
+              {filteredSuggestions.length > 0 && (
+                <div className="absolute top-[calc(100%+8px)] z-10 max-h-64 w-full overflow-y-auto rounded-2xl border border-black/[0.06] bg-white shadow-[0_24px_48px_-16px_rgba(16,24,22,0.18)]">
+                  {filteredSuggestions.map((sug, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSearchTerm(sug)
+                        setInputFocused(false)
+                      }}
+                      className="flex w-full items-center gap-3 border-l-4 border-transparent px-6 py-3 text-left text-base text-gray-900 transition-colors hover:border-[#00564C] hover:bg-gray-50 focus:outline-none"
+                    >
+                      <IoSearch className="flex-shrink-0 text-lg text-gray-400" />
+                      <span className="truncate">{sug}</span>
+                    </button>
+                  ))}
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Blog list */}
-      <div className="p-4 sm:p-6 lg:p-8">
-  
-          {/* Masonry layout */}
-          <div className="mx-auto max-w-7xl columns-1 sm:columns-2 lg:columns-3 xl:columns-3 gap-6 space-y-6">
-            {filteredBlogs.slice(0, visibleCount).map((blog) => (
-              <div key={blog.id} className="relative group break-inside-avoid mb-6">
-                
-                <BlogCard
-                  title={blog.title}
-                  description={blog.description}
-                  author={blog.author}
-                  date={blog.date}
-                  link={blog.link}
-                  onReadMore={
-                    blog.isFirestore ? () => navigate(`/blogs/${blog.id}`) : undefined
-                  }
-                />
-
-                {/* Edit / Delete */}
-                {blog.isFirestore && user && blog.authorId === user.id && (
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => openEdit(blog)}
-                      className="bg-white/90 hover:bg-white text-[#00564C] p-2 rounded-lg shadow-md"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(blog)}
-                      className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-lg shadow-md"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+              )}
+              {searchTerm.trim() && filteredSuggestions.length === 0 && (
+                <div className="absolute top-[calc(100%+8px)] z-10 w-full rounded-2xl border border-black/[0.06] bg-white shadow-[0_24px_48px_-16px_rgba(16,24,22,0.18)]">
+                  <div className="px-6 py-4 text-center text-gray-500">
+                    No blogs match &quot;{searchTerm}&quot;
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* View More button (IMPORTANT: outside columns) */}
-          {visibleCount < filteredBlogs.length && (
-            <div className="flex justify-center mt-10">
-              <button
-                onClick={() => setVisibleCount((c) => c + 5)}
-                className="bg-white text-[#00564C] font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-2xl hover:bg-green-50 transition shadow-lg text-base sm:text-lg"
-              >
-                View More
-              </button>
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
+      </div>
+
+      <WhyAfroTaskBoard />
+
+      {/* Blog list */}
+      <div className="p-4 pt-6 sm:p-6 lg:p-8">
+        {/* Masonry layout */}
+        <div className="mx-auto max-w-7xl columns-1 gap-6 space-y-6 sm:columns-2 lg:columns-3 xl:columns-3">
+          {filteredBlogs.slice(0, visibleCount).map((blog) => (
+            <div key={blog.id} className="group relative mb-6 break-inside-avoid">
+              <BlogCard
+                title={blog.title}
+                description={blog.description}
+                author={blog.author}
+                date={blog.date}
+                link={blog.link}
+                onReadMore={
+                  blog.isFirestore ? () => navigate(`/blogs/${blog.id}`) : undefined
+                }
+              />
+
+              {/* Edit / Delete */}
+              {blog.isFirestore && user && blog.authorId === user.id && (
+                <div className="absolute right-3 top-3 flex gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                  <button
+                    onClick={() => openEdit(blog)}
+                    className="rounded-lg bg-white/95 p-2 text-[#00564C] shadow-md backdrop-blur-sm hover:bg-white"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(blog)}
+                    className="rounded-lg bg-white/95 p-2 text-red-600 shadow-md backdrop-blur-sm hover:bg-white"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {filteredBlogs.length === 0 && (
+          <div className="mx-auto max-w-md py-16 text-center">
+            <p className="mb-1 text-base font-medium text-gray-700">No posts found</p>
+            <p className="text-sm text-gray-400">Try a different search term</p>
+          </div>
+        )}
+
+        {/* View More button (IMPORTANT: outside columns) */}
+        {visibleCount < filteredBlogs.length && (
+          <div className="mt-10 flex justify-center">
+            <button
+              onClick={() => setVisibleCount((c) => c + 5)}
+              className="rounded-2xl border border-black/[0.06] bg-white px-6 py-3 text-base font-semibold text-[#00564C] shadow-[0_1px_2px_rgba(16,24,22,0.04),0_12px_32px_-16px_rgba(16,24,22,0.10)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-12px_rgba(0,86,76,0.2)] sm:px-8 sm:py-4 sm:text-lg"
+            >
+              View more
+            </button>
+          </div>
+        )}
+      </div>
 
       <Footer />
 
       {/* ── Create / Edit Blog Modal ── */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900">{editBlog ? 'Edit Blog Post' : 'Create Blog Post'}</h3>
-              <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition">
-                <X className="w-5 h-5 text-gray-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 p-6">
+              <h3 className="text-xl font-bold text-[#0B1F1C]">{editBlog ? 'Edit blog post' : 'Create blog post'}</h3>
+              <button onClick={() => setShowCreateModal(false)} className="rounded-full p-2 transition hover:bg-gray-100">
+                <X className="h-5 w-5 text-gray-600" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 p-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Blog Title *</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Blog title *</label>
                 <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-[#00564C]"
                   placeholder="Enter blog title" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Short Description *</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Short description *</label>
                 <input type="text" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-[#00564C]"
                   placeholder="Brief preview text" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Content *</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Full content *</label>
                 <textarea value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} required rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-[#00564C]"
                   placeholder="Write your full blog content here..." />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Blog Image</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Blog image</label>
                 <input type="file" accept="image/*" onChange={handleImageChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg" />
-                {imagePreview && <img src={imagePreview} alt="Preview" className="mt-3 w-full h-48 object-cover rounded-lg" />}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3" />
+                {imagePreview && <img src={imagePreview} alt="Preview" className="mt-3 h-48 w-full rounded-lg object-cover" />}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Author</label>
                 <input type="text" value={user?.fullName || user?.name || ''} disabled
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500" />
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-500" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                  className="flex-1 rounded-lg border border-gray-300 px-6 py-3 text-gray-700 transition hover:bg-gray-50">
                   Cancel
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 px-6 py-3 bg-[#00564C] hover:bg-[#027568] disabled:opacity-60 text-white rounded-lg font-medium transition">
-                  {saving ? (editBlog ? 'Saving...' : 'Publishing...') : (editBlog ? 'Save Changes' : 'Publish Blog')}
+                  className="flex-1 rounded-lg bg-[#00564C] px-6 py-3 font-medium text-white transition hover:bg-[#027568] disabled:opacity-60">
+                  {saving ? (editBlog ? 'Saving...' : 'Publishing...') : (editBlog ? 'Save changes' : 'Publish blog')}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* ── Read More Modal ──
-      {showReadModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 pr-4">{showReadModal.title}</h3>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {user && showReadModal.authorId === user.id && (
-                  <>
-                    <button onClick={() => { setShowReadModal(null); openEdit(showReadModal) }}
-                      className="p-2 hover:bg-gray-100 rounded-full transition text-[#00564C]" title="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(showReadModal)}
-                      className="p-2 hover:bg-gray-100 rounded-full transition text-red-600" title="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
-                <button onClick={() => setShowReadModal(null)} className="p-2 hover:bg-gray-100 rounded-full transition">
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              {showReadModal.link && (
-                <img src={showReadModal.link} alt={showReadModal.title} className="w-full h-64 object-cover rounded-xl" />
-              )}
-              <p className="text-sm text-gray-500">{showReadModal.author} · {showReadModal.date}</p>
-              <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{showReadModal.raw?.content || showReadModal.description}</p>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   )
 }

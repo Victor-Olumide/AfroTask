@@ -1,6 +1,4 @@
 import { FaStar } from "react-icons/fa";
-import { BiDollar } from "react-icons/bi";
-
 import { useNavigate } from "react-router-dom";
 
 export default function Card({
@@ -15,34 +13,36 @@ export default function Card({
   const navigate = useNavigate();
   return (
     <div
-      className="flex flex-col items-center rounded-2xl lg:w-[160px] md:w-[140px] sm:w-[120px] w-[105px] h-auto space-y-2 hover:scale-95 transition-transform duration-300 cursor-pointer text-gray-800 p-4"
+      className="group w-full cursor-pointer overflow-hidden rounded-2xl border border-black/[0.06] bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#00564C]/20 hover:shadow-[0_16px_32px_-16px_rgba(0,86,76,0.22)]"
       onClick={() => navigate(`/profile/${userId}`)}
     >
-      <div className="relative flex flex-col items-center gap-3 lg:h-[160px] md:h-[140px] md:w-[140px] sm:h-[120px] sm:w-[120px] h-[105px] w-[105px] lg:w-[160px] group">
-        <div className="absolute top-0 bg-gray-200 h-full w-full rounded-2xl"></div>
-
-        <div className="absolute top-2 bg-gray-300 h-full w-full rounded-2xl"></div>
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-100">
         <img
           src={image || "/img/blog1.png"}
-          alt={name || "Afro Task"}
-          className="absolute top-4 h-full w-full rounded-2xl z-20 object-cover transition-transform duration-300 group-hover:-translate-y-2"
+          alt={name || "AfroTask freelancer"}
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[11px] font-semibold text-gray-800 shadow-sm backdrop-blur-sm">
+          <FaStar className="text-[#FB9E01] text-[10px]" />
+          {rating || "New"}
+          {reviews ? <span className="font-normal text-gray-500">({reviews})</span> : null}
+        </div>
       </div>
 
-      <div className="flex flex-col items-center justify-between gap-2 p-1 translate-y-6 space-y-2 ">
-        <p className="lg:text-sm text-xs font-medium md:h-8 w-full text-start text-gray-700">
-        {title.toUpperCase() || "Skilled Professional"}
+      <div className="p-3.5">
+        <p className="mb-0.5 truncate text-sm font-semibold text-[#0B1F1C]">
+          {name || "Skilled Professional"}
+        </p>
+        <p className="mb-2.5 truncate text-[11px] text-gray-500">
+          {title || "Skilled Professional"}
         </p>
 
-        <div className="flex flex-col w-full justify-start items-start text-xs text-gray-600">
-          <p className="flex flex-row items-center font-medium gap-4">
-            <FaStar className="lg:text-sm text-xs" />
-            {rating}({reviews})
-          </p>
-          <p className="flex flex-row font-medium items-center gap-4">
-            <BiDollar className="lg:text-base font-black text-sm  " />
-            {hourlyRate}/Hr
-          </p>
+        <div className="flex items-center justify-between border-t border-gray-100 pt-2.5">
+          <span className="text-[10px] uppercase tracking-wide text-gray-400">Rate</span>
+          <span className="text-xs font-semibold text-[#00564C]">
+            {hourlyRate === "Negotiable" ? "Negotiable" : `₦${hourlyRate}/hr`}
+          </span>
         </div>
       </div>
     </div>

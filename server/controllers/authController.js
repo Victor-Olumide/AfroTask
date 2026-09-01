@@ -119,7 +119,7 @@ export const register = async (req, res) => {
       companyName: companyName || null,
       companyType: companyType || null,
       accountType,
-      nin: nin || null,
+      nin: nationalId || null,
       ninVerified: false,
       createdAt: new Date().toISOString()
     };

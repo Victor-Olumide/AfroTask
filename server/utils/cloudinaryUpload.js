@@ -18,7 +18,7 @@ export const uploadToCloudinary = async (fileBuffer, folder = 'afro-task/profile
       // Video-specific options
       uploadOptions.resource_type = 'video';
       uploadOptions.chunk_size = 6000000; // 6MB chunks for large videos
-      uploadOptions.eager_async = true; // Process video asynchronously
+      uploadOptions.eager_async = true; // Process video asynchronously,
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(

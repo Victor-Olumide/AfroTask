@@ -1,5 +1,5 @@
 import express from 'express';
-import { createPost, getPost, getFeed, likePost, addComment, likeComment, deletePost, getUserPosts, incrementPostView, getComments, repostPost, getPostViewers, reactToPost } from '../controllers/postController.js';
+import { createPost, getPost, getFeed, likePost, addComment, deleteComment, likeComment, deletePost, getUserPosts, incrementPostView, getComments, repostPost, getPostViewers, reactToPost } from '../controllers/postController.js';
 import { protect } from '../middlewares/auth.js';
 import { mediaUpload } from '../middlewares/upload.js';
 
@@ -12,6 +12,7 @@ router.get('/:postId', protect, getPost);
 router.post('/:postId/like', protect, likePost);
 router.post('/:postId/react', protect, reactToPost);
 router.post('/:postId/comments', protect, addComment);
+router.delete('/:postId/:commentId', protect, deleteComment);
 router.post('/:postId/comments/:commentId/like', protect, likeComment);
 router.get('/:postId/comments', protect, getComments);
 router.post('/:postId/view', protect, incrementPostView);

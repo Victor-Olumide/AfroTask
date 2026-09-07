@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import { 
-  User, Briefcase, Link as LinkIcon, Camera, Video, 
-  CheckCircle, ArrowRight, ArrowLeft, Upload 
+  User, Briefcase, Link as LinkIcon, Camera, 
+  CheckCircle, ArrowRight, ArrowLeft
 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -42,10 +42,6 @@ const FreelancerOnboarding = () => {
 
   const [profileImage, setProfileImage] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
-
-  const [introVideo, setIntroVideo] = useState(null);
-  const [videoPreview, setVideoPreview] = useState(null);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   useEffect(() => {
     checkStatus();
@@ -129,43 +125,25 @@ const FreelancerOnboarding = () => {
       toast.error('Please upload a photo');
       return;
     }
-    if (profileImage) {
-      setLoading(true);
-      try {
+    setLoading(true);
+    try {
+      if (profileImage) {
         const formData = new FormData();
         formData.append('profileImage', profileImage);
         await api.put('/profile/update', formData);
-        toast.success('Uploaded!');
-      } catch (error) {
-        toast.error('Failed');
-        setLoading(false);
-        return;
-      } finally {
-        setLoading(false);
       }
-    }
-    setCurrentStep(5);
-  };
-
-  const handleStep5 = async () => {
-    if (!introVideo) {
-      toast.error('Please upload video');
-      return;
-    }
-    setUploadingVideo(true);
-    try {
-      const formData = new FormData();
-      formData.append('video', introVideo);
-      const response = await api.post('/onboarding/intro-video', formData);
+      const response = await api.post('/onboarding/complete');
       if (response.data.profileCompleted) {
-        await api.post('/onboarding/complete');
         toast.success('🎉 Complete!');
         setTimeout(() => navigate('/freelancer/feed'), 2000);
+      } else {
+        toast.success('Uploaded!');
+        navigate('/freelancer/feed');
       }
     } catch (error) {
-      toast.error('Failed');
+      toast.error(error.response?.data?.message || 'Failed');
     } finally {
-      setUploadingVideo(false);
+      setLoading(false);
     }
   };
 
@@ -199,14 +177,14 @@ const FreelancerOnboarding = () => {
 
         <div className="mb-8">
           <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium">Step {currentStep} of 5</span>
-            <span className="text-sm font-medium text-green-600">{Math.round((currentStep / 5) * 100)}%</span>
+            <span className="text-sm font-medium">Step {currentStep} of 4</span>
+            <span className="text-sm font-medium text-green-600">{Math.round((currentStep / 4) * 100)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
             <motion.div
               className="bg-green-600 h-3 rounded-full"
               initial={{ width: 0 }}
-              animate={{ width: `${(currentStep / 5) * 100}%` }}
+              animate={{ width: `${(currentStep / 4) * 100}%` }}
             />
           </div>
         </div>
@@ -216,8 +194,7 @@ const FreelancerOnboarding = () => {
             { num: 1, icon: User, label: 'Info' },
             { num: 2, icon: Briefcase, label: 'Skills' },
             { num: 3, icon: LinkIcon, label: 'Links' },
-            { num: 4, icon: Camera, label: 'Photo' },
-            { num: 5, icon: Video, label: 'Video' }
+            { num: 4, icon: Camera, label: 'Photo' }
           ].map((step) => (
             <div key={step.num} className="flex flex-col items-center">
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
@@ -453,68 +430,7 @@ const FreelancerOnboarding = () => {
                   disabled={loading}
                   className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg disabled:opacity-50"
                 >
-                  {loading ? 'Uploading...' : 'Next'} <ArrowRight className="w-5 h-5 inline ml-2" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 5 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-6">Introduction Video</h2>
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Important:</strong> Record a 30-90 second video introducing yourself.
-                </p>
-              </div>
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                {videoPreview ? (
-                  <div>
-                    <video src={videoPreview} controls className="w-full max-h-96 rounded-lg mb-4" />
-                    <button
-                      onClick={() => {
-                        setIntroVideo(null);
-                        setVideoPreview(null);
-                      }}
-                      className="text-red-600"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer">
-                    <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">Upload video</p>
-                    <p className="text-sm text-gray-500">Max 100MB</p>
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          if (file.size > 100 * 1024 * 1024) {
-                            toast.error('Video must be less than 100MB');
-                            return;
-                          }
-                          setIntroVideo(file);
-                          setVideoPreview(URL.createObjectURL(file));
-                        }
-                      }}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setCurrentStep(4)} className="flex-1 px-6 py-3 border rounded-lg">
-                  <ArrowLeft className="w-5 h-5 inline mr-2" /> Back
-                </button>
-                <button
-                  onClick={handleStep5}
-                  disabled={uploadingVideo || !introVideo}
-                  className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg disabled:opacity-50"
-                >
-                  {uploadingVideo ? 'Uploading...' : 'Complete'} <CheckCircle className="w-5 h-5 inline ml-2" />
+                  {loading ? 'Submitting...' : 'Submit'} <CheckCircle className="w-5 h-5 inline ml-2" />
                 </button>
               </div>
             </div>

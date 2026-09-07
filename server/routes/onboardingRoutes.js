@@ -4,12 +4,12 @@ import {
   updateProfessionalInfo,
   updateSkills,
   updateSocialLinks,
-  uploadIntroVideo,
+  // uploadIntroVideo,
   updateHiringPreferences,
   completeOnboarding
 } from '../controllers/onboardingController.js';
 import { protect } from '../middlewares/auth.js';
-import { mediaUpload } from '../middlewares/upload.js';
+// import { mediaUpload } from '../middlewares/upload.js';
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.get('/status', protect, getProfileStatus);
 router.put('/professional-info', protect, updateProfessionalInfo);
 router.put('/skills', protect, updateSkills);
 router.put('/social-links', protect, updateSocialLinks);
-router.post('/intro-video', protect, mediaUpload.single('video'), uploadIntroVideo);
+// router.post('/intro-video', protect, mediaUpload.single('video'), uploadIntroVideo);
 
 // Client onboarding
 router.put('/hiring-preferences', protect, updateHiringPreferences);

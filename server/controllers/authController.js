@@ -165,9 +165,16 @@ export const login = async (req, res) => {
     const userDoc = snapshot.docs[0];
     const user = { id: userDoc.id, ...userDoc.data() };
 
+    // Make sure the account has a valid password hash
+    if (!user.password || typeof user.password !== 'string') {
+      return res.status(401).json({
+        message: 'This account does not use email/password login'
+      });
+    }
+
     // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    
+
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }

@@ -182,16 +182,6 @@ const ExploreJobs = () => {
         }, 2000);
         return;
       }
-      
-      // Check specifically for intro video
-      const userResponse = await api.get('/auth/me');
-      if (!userResponse.data.user.introVideoUrl) {
-        toast.error('You must upload a professional introduction video before applying to jobs');
-        setTimeout(() => {
-          window.location.href = '/freelancer/onboarding';
-        }, 2000);
-        return;
-      }
     } catch (error) {
       console.error('Failed to check profile status');
     }

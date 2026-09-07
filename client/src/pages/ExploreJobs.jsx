@@ -10,6 +10,7 @@ import { useDarkMode } from '../context/DarkModeContext';
 const ExploreJobs = () => {
   const { dark } = useDarkMode();
   const [jobs, setJobs] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showJobDetails, setShowJobDetails] = useState(false);
@@ -47,8 +48,16 @@ const ExploreJobs = () => {
     return Array.from(new Set(allSkills)).sort();
   }, [jobs]);
 
+  // Set of jobIds the current user has already applied to — drives the
+  // "Applied" button state below. Recomputed any time `applications` is
+  // invalidated (initial fetch, or right after a successful submission).
+  const appliedJobIds = useMemo(() => {
+    return new Set(applications.map(app => app.jobId));
+  }, [applications]);
+
   useEffect(() => {
     fetchJobs();
+    fetchApplications();
   }, []);
 
   const fetchJobs = async () => {
@@ -59,6 +68,16 @@ const ExploreJobs = () => {
       toast.error('Failed to load jobs');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchApplications = async () => {
+    try {
+      const response = await api.get('/applications/my-applications');
+      setApplications(response.data.applications);
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+      // Non-fatal: don't block the jobs list if this call fails
     }
   };
 
@@ -146,6 +165,13 @@ const ExploreJobs = () => {
   }, [jobs, filters]);
 
   const handleApply = async (job) => {
+    // Already applied — button should be disabled, but guard here too
+    // in case this gets called from somewhere else (e.g. modal).
+    if (appliedJobIds.has(job.id)) {
+      toast.error('You already applied to this job');
+      return;
+    }
+
     // Check if profile is completed and has intro video
     try {
       const response = await api.get('/onboarding/status');
@@ -188,37 +214,71 @@ const ExploreJobs = () => {
     }
   };
 
-  const submitApplication = async (e) => {
-    e.preventDefault();
-    
-    if (!cvFile) {
-      toast.error('Please upload your CV');
-      return;
-    }
+// New state — tracks in-flight submission
+const [submitting, setSubmitting] = useState(false);
 
-    try {
-      const formData = new FormData();
-      formData.append('jobId', selectedJob.id);
-      formData.append('proposalMessage', applicationData.proposalMessage);
-      formData.append('proposedBudget', applicationData.proposedBudget);
-      formData.append('portfolioLink', applicationData.portfolioLink);
-      formData.append('cv', cvFile);
+const submitApplication = async (e) => {
+  e.preventDefault();
 
-      await api.post('/applications', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      
-      toast.success('Application submitted successfully!');
+  // Guard 1: block if already submitting (handles double-click / double-submit)
+  if (submitting) return;
+
+  // Guard 2: block if this job was already applied to (handles stale modal state)
+  if (appliedJobIds.has(selectedJob.id)) {
+    toast.error('You already applied to this job');
+    setShowModal(false);
+    return;
+  }
+
+  if (!cvFile) {
+    toast.error('Please upload your CV');
+    return;
+  }
+
+  setSubmitting(true);
+  try {
+    const formData = new FormData();
+    formData.append('jobId', selectedJob.id);
+    formData.append('proposalMessage', applicationData.proposalMessage);
+    formData.append('proposedBudget', applicationData.proposedBudget);
+    formData.append('portfolioLink', applicationData.portfolioLink);
+    formData.append('cv', cvFile);
+
+    const response = await api.post('/applications', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    toast.success('Application submitted successfully!');
+    setShowModal(false);
+    setCvFile(null);
+    setApplicationData({ proposalMessage: '', proposedBudget: '', portfolioLink: '' });
+
+    // Invalidate applied-jobs state immediately so the button flips to
+    // "Applied" without waiting on a full refetch.
+    const newApplication = response.data?.application || { jobId: selectedJob.id };
+    setApplications(prev => [...prev, newApplication]);
+
+    fetchJobs();
+  } catch (error) {
+    // Handle server-side duplicate rejection (e.g. 409) distinctly if you
+    // want a clearer message, otherwise fall back to the generic one.
+    if (error.response?.status === 409) {
+      toast.error('You already applied to this job');
+      setApplications(prev =>
+        prev.some(a => a.jobId === selectedJob.id)
+          ? prev
+          : [...prev, { jobId: selectedJob.id }]
+      );
       setShowModal(false);
-      setCvFile(null);
-      setApplicationData({ proposalMessage: '', proposedBudget: '', portfolioLink: '' });
-      fetchJobs();
-    } catch (error) {
+    } else {
       toast.error(error.response?.data?.message || 'Failed to submit application');
     }
-  };
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <div className={`flex min-h-screen ${dark ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -329,52 +389,65 @@ const ExploreJobs = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:gap-6">
-                {filteredJobs.map(job => (
-                  <motion.div key={job.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                    className={`rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all border ${dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-                    <div className="flex flex-col md:flex-row md:items-start gap-4">
-                      <img src={job.client?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.client?.fullName || 'Client')}&background=10b981&color=fff`}
-                        alt={job.client?.fullName || 'Client'} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
-                          <div className="flex-1">
-                            <h3 className={`text-lg md:text-xl font-bold mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>{job.title}</h3>
-                            <div className={`flex flex-wrap items-center gap-2 text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
-                              {job.client?.fullName && <><span>{job.client.fullName}</span><span>•</span></>}
-                              {job.workLocation && <><span>{job.workLocation}</span><span>•</span></>}
-                              {job.status && (
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${job.status === 'open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                                  {job.status.toUpperCase()}
-                                </span>
-                              )}
+                {filteredJobs.map(job => {
+                  const hasApplied = appliedJobIds.has(job.id);
+                  return (
+                    <motion.div key={job.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                      className={`rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all border ${dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                      <div className="flex flex-col md:flex-row md:items-start gap-4">
+                        <img src={job.client?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.client?.fullName || 'Client')}&background=10b981&color=fff`}
+                          alt={job.client?.fullName || 'Client'} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
+                            <div className="flex-1">
+                              <h3 className={`text-lg md:text-xl font-bold mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>{job.title}</h3>
+                              <div className={`flex flex-wrap items-center gap-2 text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {job.client?.fullName && <><span>{job.client.fullName}</span><span>•</span></>}
+                                {job.workLocation && <><span>{job.workLocation}</span><span>•</span></>}
+                                {job.status && (
+                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${job.status === 'open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                    {job.status.toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          {job.budgetRange && (
-                            <div className="text-left md:text-right">
-                              <p className="text-xl md:text-2xl font-bold text-green-600">{job.budgetRange}</p>
-                              {job.projectType && <p className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-500'}`}>{job.projectType}</p>}
-                            </div>
-                          )}
-                        </div>
-                        {job.description && <p className={`mb-4 line-clamp-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{job.description}</p>}
-                        {job.requiredSkills?.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {job.requiredSkills.slice(0, 4).map((skill, idx) => (
-                              <span key={idx} className={`px-3 py-1 rounded-full text-sm ${dark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>{skill}</span>
-                            ))}
-                            {job.requiredSkills.length > 4 && (
-                              <span className={`px-3 py-1 rounded-full text-sm ${dark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>+{job.requiredSkills.length - 4} more</span>
+                            {job.budgetRange && (
+                              <div className="text-left md:text-right">
+                                <p className="text-xl md:text-2xl font-bold text-green-600">{job.budgetRange}</p>
+                                {job.projectType && <p className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-500'}`}>{job.projectType}</p>}
+                              </div>
                             )}
                           </div>
-                        )}
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <button onClick={() => handleApply(job)} className="flex-1 sm:flex-none px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">Apply Now</button>
-                          <button onClick={() => handleLearnMore(job)} className={`flex-1 sm:flex-none px-6 py-2.5 border rounded-lg transition ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>Learn More</button>
+                          {job.description && <p className={`mb-4 line-clamp-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{job.description}</p>}
+                          {job.requiredSkills?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {job.requiredSkills.slice(0, 4).map((skill, idx) => (
+                                <span key={idx} className={`px-3 py-1 rounded-full text-sm ${dark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>{skill}</span>
+                              ))}
+                              {job.requiredSkills.length > 4 && (
+                                <span className={`px-3 py-1 rounded-full text-sm ${dark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>+{job.requiredSkills.length - 4} more</span>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                              onClick={() => handleApply(job)}
+                              disabled={hasApplied}
+                              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-medium transition ${
+                                hasApplied
+                                  ? `cursor-not-allowed ${dark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500'}`
+                                  : 'bg-green-600 hover:bg-green-700 text-white'
+                              }`}
+                            >
+                              {hasApplied ? 'Applied' : 'Apply Now'}
+                            </button>
+                            <button onClick={() => handleLearnMore(job)} className={`flex-1 sm:flex-none px-6 py-2.5 border rounded-lg transition ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>Learn More</button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
 
@@ -447,9 +520,16 @@ const ExploreJobs = () => {
                 ))}
               </div>
               <div className={`flex flex-col sm:flex-row gap-3 pt-4 border-t ${dark ? 'border-gray-700' : 'border-gray-200'}`}>
-                <button onClick={() => { setShowJobDetails(false); handleApply(selectedJob); }}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition">
-                  Apply for this Job
+                <button
+                  onClick={() => { setShowJobDetails(false); handleApply(selectedJob); }}
+                  disabled={appliedJobIds.has(selectedJob.id)}
+                  className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${
+                    appliedJobIds.has(selectedJob.id)
+                      ? `cursor-not-allowed ${dark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500'}`
+                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                  }`}
+                >
+                  {appliedJobIds.has(selectedJob.id) ? 'Applied' : 'Apply for this Job'}
                 </button>
                 <button onClick={() => setShowJobDetails(false)}
                   className={`flex-1 px-6 py-3 border rounded-lg transition ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
@@ -499,8 +579,16 @@ const ExploreJobs = () => {
                   className={`flex-1 px-6 py-3 border rounded-lg transition text-sm ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
                   Cancel
                 </button>
-                <button type="submit" className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition text-sm font-medium">
-                  Submit Application
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={`flex-1 px-6 py-3 rounded-lg transition text-sm font-medium ${
+                    submitting
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                  }`}
+                >
+                  {submitting ? 'Submitting...' : 'Submit Application'}
                 </button>
               </div>
             </form>

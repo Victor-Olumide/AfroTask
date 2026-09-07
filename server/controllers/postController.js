@@ -17,7 +17,6 @@ export const createPost = async (req, res) => {
     let postType = type || 'text';
     
     if (req.file) {
-      // Upload to Cloudinary with resource_type based on file type
       const isVideo = req.file.mimetype.startsWith('video/');
       mediaUrl = await uploadToCloudinary(
         req.file.buffer, 
@@ -27,7 +26,6 @@ export const createPost = async (req, res) => {
       postType = isVideo ? 'video' : 'image';
     }
 
-    // Validate: either content or media must be provided
     if (!content?.trim() && !mediaUrl) {
       return res.status(400).json({ message: 'Post must have content or media' });
     }
@@ -39,13 +37,16 @@ export const createPost = async (req, res) => {
       content: content || '',
       mediaUrl: mediaUrl,
       mediaType: postType === 'video' ? 'video' : postType === 'image' ? 'image' : null,
-      image: postType === 'image' ? mediaUrl : null, // Keep for backward compatibility
+      image: postType === 'image' ? mediaUrl : null,
       hashtags: hashtags ? JSON.parse(hashtags) : [],
       likes: [],
       commentsCount: 0,
       views: 0,
       createdAt: FieldValue.serverTimestamp()
     };
+
+    // 🔧 FIX: this line was missing — postRef was never created
+    const postRef = await db.collection('posts').add(postData);
 
     console.log('Post created successfully with ID:', postRef.id);
 
@@ -57,7 +58,6 @@ export const createPost = async (req, res) => {
 
       const followerIds = followersSnapshot.docs.map(doc => doc.data().followerId);
       
-      // Send notifications to followers (limit to 100)
       const notificationPromises = followerIds.slice(0, 100).map(followerId =>
         createNotification(followerId, userId, 'new_post', { 
           postId: postRef.id,
@@ -69,7 +69,6 @@ export const createPost = async (req, res) => {
       console.log(`Sent notifications to ${followerIds.length} followers`);
     } catch (notifError) {
       console.error('Failed to send post notifications:', notifError);
-      // Don't fail the post creation if notifications fail
     }
 
     res.status(201).json({
@@ -345,6 +344,72 @@ export const addComment = async (req, res) => {
       message: 'Failed to add comment',
       error: error.message 
     });
+  }
+};
+
+// Delete a comment
+export const deleteComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const userId = req.user.userId;
+
+    const commentRef = db.collection('posts')
+      .doc(postId)
+      .collection('comments')
+      .doc(commentId);
+
+    const commentDoc = await commentRef.get();
+
+    if (!commentDoc.exists) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    const commentData = commentDoc.data();
+
+    // Only the comment's author (or the post's author) can delete it
+    const postRef = db.collection('posts').doc(postId);
+    const postDoc = await postRef.get();
+
+    if (!postDoc.exists) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const isCommentAuthor = commentData.userId === userId;
+    const isPostAuthor = postDoc.data().authorId === userId;
+
+    if (!isCommentAuthor && !isPostAuthor) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Also delete any replies to this comment
+    const repliesSnapshot = await db.collection('posts')
+      .doc(postId)
+      .collection('comments')
+      .where('parentId', '==', commentId)
+      .get();
+
+    const deleteCount = 1 + repliesSnapshot.size;
+
+    const batch = db.batch();
+    batch.delete(commentRef);
+    repliesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    // Update comment count using transaction
+    await db.runTransaction(async (transaction) => {
+      const freshPostDoc = await transaction.get(postRef);
+      if (freshPostDoc.exists) {
+        const currentCount = freshPostDoc.data().commentsCount || 0;
+        transaction.update(postRef, {
+          commentsCount: Math.max(0, currentCount - deleteCount)
+        });
+      }
+    });
+
+    res.json({ success: true, message: 'Comment deleted' });
+  } catch (error) {
+    console.error('Delete comment error:', error);
+    res.status(500).json({ message: 'Failed to delete comment' });
   }
 };
 

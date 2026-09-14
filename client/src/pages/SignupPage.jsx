@@ -5,8 +5,13 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import Footer from '../components/Footer';
-import { ArrowLeft, Eye, EyeOff, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Mail, ShieldCheck, AlertCircle } from 'lucide-react';
 import { auth, createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword, googleProvider, appleProvider, signInWithPopup } from '../config/firebase';
+
+const inputClass =
+  'w-full px-4 py-3 text-sm bg-gray-50 border border-transparent focus:border-[#00564C] focus:bg-white rounded-lg outline-none transition';
+
+const errorInputClass = 'border-red-300 bg-red-50';
 
 const SignupPage = () => {
   const { role } = useParams();
@@ -19,6 +24,8 @@ const SignupPage = () => {
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -35,9 +42,8 @@ const SignupPage = () => {
   });
   const [profileImage, setProfileImage] = useState(null);
   const [idVerifying, setIdVerifying] = useState(false);
-  const [idStatus, setIdStatus] = useState(null); // null | 'valid' | 'invalid'
+  const [idStatus, setIdStatus] = useState(null);
 
-  // Per-country national ID config: label, placeholder, regex, hint
   const NATIONAL_ID_CONFIG = {
     Nigeria:       { label: 'NIN (National Identification Number)',      placeholder: '11-digit NIN',                  regex: /^\d{11}$/,          hint: 'Your 11-digit NIMC NIN' },
     Ghana:         { label: 'Ghana Card Number',                         placeholder: 'GHA-XXXXXXXXX-X',               regex: /^GHA-\d{9}-\d$/i,   hint: 'Format: GHA-000000000-0' },
@@ -63,7 +69,7 @@ const SignupPage = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Reset ID verification if country changes
+    setFieldErrors(prev => ({ ...prev, [name]: undefined }));
     if (name === 'country') {
       setFormData(prev => ({ ...prev, country: value, nationalId: '' }));
       setIdStatus(null);
@@ -72,6 +78,7 @@ const SignupPage = () => {
 
   const handleImageChange = (e) => {
     setProfileImage(e.target.files[0]);
+    setFieldErrors(prev => ({ ...prev, profileImage: undefined }));
   };
 
   const validatePassword = (password) => {
@@ -83,19 +90,17 @@ const SignupPage = () => {
     const config = getIdConfig();
     if (!config) return;
     if (!config.regex.test(formData.nationalId)) {
-      toast.error(`Invalid format. ${config.hint}`);
+      setFieldErrors(prev => ({ ...prev, nationalId: `Invalid format. ${config.hint}` }));
       setIdStatus('invalid');
       return;
     }
     setIdVerifying(true);
     try {
-      // Simulate async check — swap for a real API call when available
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setIdStatus('valid');
-      toast.success('ID submitted. Full verification happens within 24 hours.');
     } catch {
       setIdStatus('invalid');
-      toast.error('Verification failed. Please try again.');
+      setFieldErrors(prev => ({ ...prev, nationalId: 'Verification failed. Please try again.' }));
     } finally {
       setIdVerifying(false);
     }
@@ -106,21 +111,20 @@ const SignupPage = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const { user } = result;
-      await signOut(auth); // sign out Firebase session; app uses custom tokens
+      await signOut(auth);
 
       const response = await api.post('/auth/google', {
         email: user.email,
         fullName: user.displayName,
         profileImage: user.photoURL,
         googleUid: user.uid,
-        role, // from URL param — freelancer or client
+        role,
       });
 
-      toast.success('Account created with Google!');
       login(response.data.token, response.data.user);
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') return;
-      toast.error('Google sign-up failed. Please try again.');
+      setSubmitError('Google sign-up failed. Please try again.');
       console.error('Google signup error:', err);
     } finally {
       setGoogleLoading(false);
@@ -142,38 +146,73 @@ const SignupPage = () => {
         role,
       });
 
-      toast.success('Account created with Apple!');
       login(response.data.token, response.data.user);
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
-      toast.error('Apple sign-up failed. Please try again.');
+      setSubmitError('Apple sign-up failed. Please try again.');
       console.error('Apple signup error:', err);
     } finally {
       setAppleLoading(false);
     }
   };
 
+  // Full client-side validation before anything is submitted
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.fullName.trim()) errors.fullName = 'Full name is required';
+    if (!formData.email.trim()) errors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Enter a valid email address';
+
+    if (!formData.whatsapp.trim()) errors.whatsapp = 'WhatsApp number is required';
+    if (!formData.country) errors.country = 'Please select your country';
+
+    if (role === 'freelancer' && !formData.skillCategory.trim()) {
+      errors.skillCategory = 'Primary skill is required';
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (!validatePassword(formData.password)) {
+      errors.password = 'Password must be 8+ characters with an uppercase letter, a number, and a special character';
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!profileImage) errors.profileImage = 'Profile picture is required';
+
+    const idConfig = getIdConfig();
+    if (idConfig && formData.nationalId && idStatus !== 'valid') {
+      errors.nationalId = 'Please verify your ID before submitting, or clear the field';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const isFormValid = () => {
+    if (!formData.fullName.trim()) return false;
+    if (!formData.email.trim()) return false;
+    if (!formData.whatsapp.trim()) return false;
+    if (!formData.country) return false;
+    if (role === 'freelancer' && !formData.skillCategory.trim()) return false;
+    if (!formData.password || !validatePassword(formData.password)) return false;
+    if (!formData.confirmPassword || formData.confirmPassword !== formData.password) return false;
+    if (!profileImage) return false;
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      return toast.error('Passwords do not match');
-    }
-
-    if (!validatePassword(formData.password)) {
-      return toast.error('Password must be 8+ chars with uppercase, number, and special character');
-    }
-
-    if (!profileImage) {
-      return toast.error('Profile image is required');
-    }
-
-    if (formData.nin && !validateNIN(formData.nin)) {
-      return toast.error('NIN must be exactly 11 digits');
-    }
-
-    if (formData.nin && ninStatus !== 'valid') {
-      return toast.error('Please verify your NIN before submitting');
+    if (!validateForm()) {
+      setSubmitError('Please fix the highlighted fields below.');
+      return;
     }
 
     setLoading(true);
@@ -190,18 +229,12 @@ const SignupPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // Step 2: Create Firebase Auth user and send verification email
-      // This must happen AFTER backend registration succeeds
       try {
         const fbUser = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         await sendEmailVerification(fbUser.user);
-        // Sign out of Firebase email/password session — the app uses custom tokens for
-        // Firestore/Storage, so we don't want to keep this session active
         await signOut(auth);
       } catch (fbErr) {
         if (fbErr.code === 'auth/email-already-in-use') {
-          // Firebase user already exists (e.g. user retried after a partial failure).
-          // Sign in and resend verification if not yet verified.
           try {
             const existing = await signInWithEmailAndPassword(auth, formData.email, formData.password);
             if (!existing.user.emailVerified) {
@@ -212,10 +245,8 @@ const SignupPage = () => {
             console.warn('Could not resend verification:', resendErr?.message);
           }
         } else {
-          // Non-critical — backend registration succeeded, but Firebase user creation failed.
-          // Log it but don't block the user.
           console.error('Firebase user creation failed:', fbErr.code, fbErr.message);
-          toast.error('Account created but verification email could not be sent. Please contact support.');
+          setSubmitError('Account created but the verification email could not be sent. Please contact support.');
           setLoading(false);
           return;
         }
@@ -223,9 +254,8 @@ const SignupPage = () => {
 
       setRegisteredEmail(formData.email);
       setEmailSent(true);
-      toast.success('Account created! Please verify your email before logging in.');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      setSubmitError(error.response?.data?.message || 'Registration failed. Please check your details and try again.');
     } finally {
       setLoading(false);
     }
@@ -234,24 +264,23 @@ const SignupPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <div className="p-4">
-        <Link to="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-green-600 transition font-medium text-sm">
+        <Link to="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-[#00564C] transition font-medium text-sm">
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
       </div>
 
-      {/* Email verification sent screen */}
       {emailSent ? (
         <div className="flex-1 flex items-center justify-center px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10 text-center"
+            className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm p-10 text-center"
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Mail className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-[#E6F0EF] rounded-full flex items-center justify-center mx-auto mb-5">
+              <Mail className="w-8 h-8 text-[#00564C]" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-3">Check your email</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Check your email</h2>
             <p className="text-gray-600 text-sm mb-2">
               We sent a verification link to:
             </p>
@@ -261,7 +290,7 @@ const SignupPage = () => {
             </p>
             <Link
               to="/login"
-              className="inline-block w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition text-center"
+              className="inline-block w-full bg-[#00564C] hover:bg-[#003F38] text-white font-semibold py-3 rounded-lg transition text-center"
             >
               Go to Login
             </Link>
@@ -269,70 +298,81 @@ const SignupPage = () => {
         </div>
       ) : (
       <div className="flex-1 flex items-center justify-center py-6 px-6 lg:px-12">
-        <div className="w-full max-w-6xl flex gap-8 lg:gap-12">
+        <div className="w-full max-w-6xl min-w-0 flex gap-8 lg:gap-12">
           <div className="hidden lg:flex lg:w-1/2 items-center justify-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center p-8"
+              className="w-full h-full bg-gradient-to-br from-[#00564C] to-[#00382f] rounded-2xl flex items-center justify-center p-8"
             >
-              <img 
-                src="/img/fa1.png" 
-                alt="Team collaboration" 
+              <img
+                src="/img/fa1.png"
+                alt="Team collaboration"
                 className="w-full h-auto object-contain max-h-[600px]"
               />
             </motion.div>
           </div>
 
-          <div className="w-full lg:w-1/2 flex items-center justify-center">
+          <div className="w-full lg:w-1/2 min-w-0 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8"
+              className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col max-h-[85vh]"
             >
-            <div className="text-center mb-6">
-              <img 
-                src="/img/afro-task-logo.png" 
-                alt="Afro Task" 
+            <div className="text-center px-8 pt-8 pb-4 shrink-0">
+              <img
+                src="/img/afro-task-logo.png"
+                alt="Afro Task"
                 className="h-16 w-auto mx-auto mb-4"
               />
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">Join Afro Task Today</h1>
-              <p className="text-gray-600 text-sm">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Join Afro Task Today</h1>
+              <p className="text-gray-500 text-sm">
                 Connect with top freelancers and clients across Africa. Sign up to start collaborating
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="overflow-y-auto px-8 pb-8">
+
+            {submitError && (
+              <div className="mb-4 flex items-start gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg overflow-hidden">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700 break-words min-w-0 flex-1">{submitError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Full Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className={`${inputClass} ${fieldErrors.fullName ? errorInputClass : ''}`}
                 />
+                {fieldErrors.fullName && <p className="text-xs text-red-600 mt-1">{fieldErrors.fullName}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Email Address <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className={`${inputClass} ${fieldErrors.email ? errorInputClass : ''}`}
                 />
+                {fieldErrors.email && <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>}
               </div>
 
               {role === 'freelancer' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">WhatsApp Number <span className="text-red-500">*</span></label>
                     <input
                       type="tel"
                       name="whatsapp"
@@ -340,18 +380,19 @@ const SignupPage = () => {
                       onChange={handleChange}
                       required
                       placeholder="+234..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={`${inputClass} ${fieldErrors.whatsapp ? errorInputClass : ''}`}
                     />
+                    {fieldErrors.whatsapp && <p className="text-xs text-red-600 mt-1">{fieldErrors.whatsapp}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Country <span className="text-red-500">*</span></label>
                     <select
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={`${inputClass} ${fieldErrors.country ? errorInputClass : ''}`}
                     >
                       <option value="">Select your country</option>
                       <option value="Nigeria">🇳🇬 Nigeria</option>
@@ -372,10 +413,11 @@ const SignupPage = () => {
                       <option value="Botswana">🇧🇼 Botswana</option>
                       <option value="Other">🌍 Other</option>
                     </select>
+                    {fieldErrors.country && <p className="text-xs text-red-600 mt-1">{fieldErrors.country}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Primary Skill/Service</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Primary Skill/Service <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       name="skillCategory"
@@ -383,9 +425,13 @@ const SignupPage = () => {
                       onChange={handleChange}
                       required
                       placeholder="e.g., Full Stack Developer, UI/UX Designer, Video Editor"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={`${inputClass} ${fieldErrors.skillCategory ? errorInputClass : ''}`}
                     />
-                    <p className="text-xs text-gray-500 mt-1">What service do you offer?</p>
+                    {fieldErrors.skillCategory ? (
+                      <p className="text-xs text-red-600 mt-1">{fieldErrors.skillCategory}</p>
+                    ) : (
+                      <p className="text-xs text-gray-400 mt-1">What service do you offer?</p>
+                    )}
                   </div>
                 </>
               )}
@@ -393,7 +439,7 @@ const SignupPage = () => {
               {role === 'client' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">WhatsApp Number <span className="text-red-500">*</span></label>
                     <input
                       type="tel"
                       name="whatsapp"
@@ -401,18 +447,19 @@ const SignupPage = () => {
                       onChange={handleChange}
                       required
                       placeholder="+234..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={`${inputClass} ${fieldErrors.whatsapp ? errorInputClass : ''}`}
                     />
+                    {fieldErrors.whatsapp && <p className="text-xs text-red-600 mt-1">{fieldErrors.whatsapp}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Country <span className="text-red-500">*</span></label>
                     <select
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={`${inputClass} ${fieldErrors.country ? errorInputClass : ''}`}
                     >
                       <option value="">Select your country</option>
                       <option value="Nigeria">🇳🇬 Nigeria</option>
@@ -433,26 +480,27 @@ const SignupPage = () => {
                       <option value="Botswana">🇧🇼 Botswana</option>
                       <option value="Other">🌍 Other</option>
                     </select>
+                    {fieldErrors.country && <p className="text-xs text-red-600 mt-1">{fieldErrors.country}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Company Name (Optional)</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Company Name (Optional)</label>
                     <input
                       type="text"
                       name="companyName"
                       value={formData.companyName}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={inputClass}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Company Type</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Company Type</label>
                     <select
                       name="companyType"
                       value={formData.companyType}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={inputClass}
                     >
                       <option value="">Select type</option>
                       <option value="Startup">Startup</option>
@@ -464,12 +512,11 @@ const SignupPage = () => {
                 </>
               )}
 
-              {/* National ID — shown only after a country is selected */}
               {getIdConfig() && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
                   {getIdConfig().label}
-                  <span className="ml-1 text-gray-400 font-normal text-xs">— Optional but recommended</span>
+                  <span className="ml-1 text-gray-400 font-normal">— Optional but recommended</span>
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -480,45 +527,48 @@ const SignupPage = () => {
                       onChange={(e) => {
                         setFormData({ ...formData, nationalId: e.target.value });
                         setIdStatus(null);
+                        setFieldErrors(prev => ({ ...prev, nationalId: undefined }));
                       }}
                       placeholder={getIdConfig().placeholder}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                      className={`${inputClass} ${
                         idStatus === 'valid'
-                          ? 'border-green-500 bg-green-50'
-                          : idStatus === 'invalid'
-                          ? 'border-red-400 bg-red-50'
-                          : 'border-gray-300'
+                          ? 'border-[#00564C] bg-[#E6F0EF]'
+                          : idStatus === 'invalid' || fieldErrors.nationalId
+                          ? errorInputClass
+                          : ''
                       }`}
                     />
                     {idStatus === 'valid' && (
-                      <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                      <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#00564C]" />
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={handleVerifyId}
                     disabled={idVerifying || !formData.nationalId || idStatus === 'valid'}
-                    className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 whitespace-nowrap"
+                    className="px-4 py-3 bg-[#00564C] hover:bg-[#003F38] text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 whitespace-nowrap"
                   >
                     {idVerifying ? 'Checking...' : idStatus === 'valid' ? 'Verified ✓' : 'Verify ID'}
                   </button>
                 </div>
                 {idStatus === 'valid' && (
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <p className="text-xs text-[#00564C] mt-1 flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" /> ID submitted — full verification within 24 hours.
                   </p>
                 )}
-                {idStatus === 'invalid' && (
-                  <p className="text-xs text-red-500 mt-1">{getIdConfig().hint}</p>
+                {fieldErrors.nationalId && (
+                  <p className="text-xs text-red-600 mt-1">{fieldErrors.nationalId}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-1">
-                  Verifying your government ID builds trust and unlocks higher-paying jobs.
-                </p>
+                {!fieldErrors.nationalId && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Verifying your government ID builds trust and unlocks higher-paying jobs.
+                  </p>
+                )}
               </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Password <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -526,7 +576,7 @@ const SignupPage = () => {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className={`${inputClass} pr-11 ${fieldErrors.password ? errorInputClass : ''}`}
                   />
                   <button
                     type="button"
@@ -536,10 +586,15 @@ const SignupPage = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {fieldErrors.password ? (
+                  <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1">8+ characters, one uppercase letter, one number, one special character</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Confirm Password <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -547,7 +602,7 @@ const SignupPage = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className={`${inputClass} pr-11 ${fieldErrors.confirmPassword ? errorInputClass : ''}`}
                   />
                   <button
                     type="button"
@@ -557,29 +612,30 @@ const SignupPage = () => {
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {fieldErrors.confirmPassword && <p className="text-xs text-red-600 mt-1">{fieldErrors.confirmPassword}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Profile Picture <span className="text-red-500">*</span></label>
                 <input
                   type="file"
                   onChange={handleImageChange}
                   accept="image/*"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className={`${inputClass} file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-[#E6F0EF] file:text-[#00564C] file:text-sm file:font-medium ${fieldErrors.profileImage ? errorInputClass : ''}`}
                 />
+                {fieldErrors.profileImage && <p className="text-xs text-red-600 mt-1">{fieldErrors.profileImage}</p>}
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
+                disabled={loading || !isFormValid()}
+                className="w-full bg-[#00564C] hover:bg-[#003F38] text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
 
-            {/* Divider */}
             <div className="flex items-center gap-3 my-5">
               <div className="flex-1 h-px bg-gray-200" />
               <span className="text-xs text-gray-400 font-medium">OR</span>
@@ -619,11 +675,12 @@ const SignupPage = () => {
               Already have an account?{' '}
               <button
                 onClick={() => navigate('/login')}
-                className="text-green-600 hover:text-green-700 font-semibold"
+                className="text-[#00564C] hover:text-[#003F38] font-semibold"
               >
                 Log in
               </button>
             </p>
+            </div>
           </motion.div>
         </div>
         </div>

@@ -1,23 +1,34 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Home, Briefcase, FileText, FolderOpen, CheckCircle, 
-  User, PlusCircle, Search, MessageSquare, X, BookOpen, Moon, Sun,
-  Bookmark
+import {
+  Home, Briefcase, FileText, FolderOpen, CheckCircle,
+  User, PlusCircle, Search, MessageSquare, X, BookOpen,
+  Bookmark, Settings, LogOut, ChevronUp, Menu
 } from 'lucide-react';
-import { IoMdSettings } from "react-icons/io";
 import { AuthContext } from '../context/AuthContext';
 import { useDarkMode } from '../context/DarkModeContext';
 
-const Sidebar = () => {
+const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useContext(AuthContext);
-  const { dark, toggle } = useDarkMode();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout } = useContext(AuthContext);
+  const { dark } = useDarkMode();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef(null);
 
   const isFreelancer = user?.role === 'freelancer';
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const freelancerMenu = [
     { name: 'Feed', path: '/freelancer/feed', icon: Home },
@@ -46,34 +57,38 @@ const Sidebar = () => {
   ];
 
   const menuItems = isFreelancer ? freelancerMenu : clientMenu;
-  const activeColor = isFreelancer ? 'bg-green-600' : 'bg-yellow-600';
-  const hoverColor = isFreelancer ? 'hover:bg-green-50' : 'hover:bg-yellow-50';
+  const activeColor = 'bg-[#00564C]';
+  const hoverColor = dark ? 'hover:bg-slate-800' : 'hover:bg-[#E6F0EF]';
 
   const handleNavigation = (path) => {
     navigate(path);
-    setIsMobileMenuOpen(false);
+    if (setIsMobileMenuOpen) setIsMobileMenuOpen(false);
   };
 
-  // Inline JSX — not a nested component, so hooks/context always stay in sync
   const sidebarInner = (
-    <>
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full">
+      <div className={`p-5 border-b flex items-center justify-between ${dark ? 'border-slate-800' : 'border-gray-200'}`}>
+        {!isCollapsed && (
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleNavigation('/')}>
-            <img src="/img/afro-task-logo.png" alt="Afro Task" className="h-10 w-auto" />
+            <img src="/img/afro-task-logo.png" alt="Afro Task" className="h-9 w-auto" />
           </div>
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+        )}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={`hidden lg:flex p-2 rounded-lg transition ${dark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-100 text-gray-500'}`}
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(false)}
+          className={`lg:hidden p-2 rounded-lg ${dark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-100 text-gray-700'}`}
+        >
+          <X className="w-6 h-6" />
+        </button>
       </div>
 
-      {/* Menu Items */}
-      <nav className="flex-1 overflow-y-auto py-6 px-3">
+      <nav className="flex-1 overflow-y-auto py-4 px-3">
         <div className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -82,97 +97,127 @@ const Sidebar = () => {
               <motion.button
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
-                whileHover={{ x: 4 }}
+                whileHover={{ x: isCollapsed ? 0 : 4 }}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                title={isCollapsed ? item.name : undefined}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isCollapsed ? 'justify-center' : ''
+                } ${
                   isActive
-                    ? `${activeColor} text-white shadow-lg`
-                    : `text-gray-700 ${hoverColor}`
+                    ? `${activeColor} text-white shadow-md`
+                    : dark ? `text-slate-300 ${hoverColor}` : `text-gray-700 ${hoverColor}`
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.name}</span>
+                <Icon className="w-5 h-5 shrink-0" />
+                {!isCollapsed && <span>{item.name}</span>}
               </motion.button>
             );
           })}
         </div>
       </nav>
 
-      {/* User Info + Dark Mode Toggle */}
-      <div className="p-4 border-t border-gray-200 space-y-1">
-        <div className="flex items-center gap-3 mb-3">
-          <img
-            src={user?.profileImage || `https://ui-avatars.com/api/?name=${user?.fullName}`}
-            alt={user?.fullName}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.fullName}</p>
-            <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-          </div>
+      <div className={`p-4 border-t ${dark ? 'border-slate-800' : 'border-gray-200'}`} ref={profileMenuRef}>
+        <div className="relative">
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className={`w-full flex items-center gap-3 p-2 rounded-xl transition ${
+              dark ? 'hover:bg-slate-800' : 'hover:bg-gray-50'
+            } ${isCollapsed ? 'justify-center' : ''}`}
+          >
+            <img
+              src={user?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}`}
+              alt={user?.fullName}
+              className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-[#00564C]/30"
+            />
+            {!isCollapsed && (
+              <>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className={`text-sm font-semibold truncate ${dark ? 'text-white' : 'text-gray-900'}`}>{user?.fullName || 'User'}</p>
+                  <p className="text-xs text-gray-400 capitalize">{user?.role || 'Member'}</p>
+                </div>
+                <ChevronUp className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? '' : 'rotate-180'}`} />
+              </>
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showProfileMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                transition={{ duration: 0.15 }}
+                className={`absolute bottom-full mb-2 w-56 rounded-xl shadow-xl border py-2 z-50 ${
+                  dark ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-gray-100 text-gray-700'
+                } ${isCollapsed ? 'left-0' : 'left-0 right-0'}`}
+              >
+                <button
+                  onClick={() => { setShowProfileMenu(false); handleNavigation(`/${user?.role || 'freelancer'}/profile`); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-xs font-medium transition ${dark ? 'hover:bg-slate-800' : 'hover:bg-gray-50'}`}
+                >
+                  <User className="w-4 h-4 text-gray-400" />
+                  View Profile
+                </button>
+                <button
+                  onClick={() => { setShowProfileMenu(false); handleNavigation('/settings'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-xs font-medium transition ${dark ? 'hover:bg-slate-800' : 'hover:bg-gray-50'}`}
+                >
+                  <Settings className="w-4 h-4 text-gray-400" />
+                  Settings
+                </button>
+                <div className={`border-t mt-1 pt-1 ${dark ? 'border-slate-800' : 'border-gray-100'}`}>
+                  <button
+                    onClick={() => { setShowProfileMenu(false); logout(); }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Dark mode toggle */}
-        {/* <button
-          onClick={toggle}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition"
-        >
-          <span className="text-sm font-medium text-gray-700">
-            {dark ? 'Light Mode' : 'Dark Mode'}
-          </span>
-          {dark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-gray-500" />}
-        </button> */}
-
-        <button  className="w-full flex items-center gap-4 justify-between px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition" onClick={() => handleNavigation("/settings")}> 
-        <span className="text-sm font-medium text-gray-700">Settings</span>
-        <IoMdSettings className="w-4 h-4 text-gray-400" /> 
-        </button>
       </div>
-    </>
+    </div>
   );
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 bg-white dashboard-sidebar border-r border-gray-200 z-40">
+      {/* Desktop Persistent Sidebar */}
+      <div
+        className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen border-r z-40 transition-all duration-200 ${
+          dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
+        } ${isCollapsed ? 'w-20' : 'w-64'}`}
+      >
         {sidebarInner}
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Drawer Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <>
+          <div className="lg:hidden fixed inset-0 z-50 flex">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="lg:hidden fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ x: -300 }}
+              initial={{ x: '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: -300 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="lg:hidden fixed left-0 top-0 h-screen w-64 bg-white dashboard-sidebar border-r border-gray-200 flex flex-col z-50"
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`relative z-10 h-full w-64 border-r shadow-2xl flex flex-col ${
+                dark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-gray-200 text-slate-900'
+              }`}
             >
               {sidebarInner}
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
-
-      {/* Mobile Menu Button */}
-      {!isMobileMenuOpen && (
-        <button
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="lg:hidden fixed top-4 left-4 p-3 bg-[#00564c] text-white rounded-lg shadow-lg z-40"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      )}
     </>
   );
 };

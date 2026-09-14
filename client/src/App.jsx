@@ -25,7 +25,6 @@ import CreatePost from './pages/CreatePost';
 import PostJob from './pages/PostJob';
 import MyJobs from './pages/MyJobs';
 import MyProjects from './pages/MyProjects';
-import WhatsAppBubble from './components/WhatsAppBubble';
 import NotFound from './pages/NotFound';
 import SearchResults from './pages/SearchResults';
 import Blogs from './pages/Blogs';
@@ -50,7 +49,6 @@ function App() {
       <AuthProvider>
         <ScrollToTop />
         <Toaster position="top-right" />
-        <WhatsAppBubble />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/welcome" element={<WelcomePage />} />
@@ -64,24 +62,20 @@ function App() {
           <Route path="/policy" element={<PolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           
-          {/* Global Search Route */}
           <Route path="/search" element={
             <PrivateRoute>
               <SearchResults />
             </PrivateRoute>
           } />
 
-          {/* App Settings Route */}
           <Route path="/settings" element={
             <PrivateRoute>
               <AppSettingsPage />
             </PrivateRoute>
           } />
           
-          {/* Freelancers Directory */}
           <Route path="/freelancers" element={<FreelancersPage />} />
 
-          {/* Onboarding Routes */}
           <Route path="/freelancer/onboarding" element={
             <PrivateRoute role="freelancer">
               <FreelancerOnboarding />
@@ -93,7 +87,6 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Freelancer Routes */}
           <Route path="/freelancer/dashboard" element={
             <PrivateRoute role="freelancer">
               <FreelancerFeed />
@@ -145,35 +138,30 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Public Profile Route */}
           <Route path="/profile/:userId" element={
             <PrivateRoute>
               <PublicProfilePage />
             </PrivateRoute>
           } />
 
-          {/* Admin Public Profile */}
           <Route path="/admin/profile/:userId" element={
             <PrivateRoute>
               <AdminProfilePage />
             </PrivateRoute>
           } />
           
-          {/* Pre-Project Chat Route */}
           <Route path="/pre-project-chat/:applicationId" element={
             <PrivateRoute>
               <PreProjectChat />
             </PrivateRoute>
           } />
           
-          {/* Project Workspace Route */}
           <Route path="/project/:projectId" element={
             <PrivateRoute>
               <ProjectWorkspace />
             </PrivateRoute>
           } />
           
-          {/* Client Routes */}
           <Route path="/client/dashboard" element={
             <PrivateRoute role="client">
               <ClientFeed />
@@ -220,7 +208,6 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={
             <PrivateRoute role="admin">

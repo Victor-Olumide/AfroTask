@@ -6,13 +6,15 @@ import { Building, Target, Camera, CheckCircle, ArrowRight, ArrowLeft } from 'lu
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
+const inputClass =
+  'w-full px-4 py-3 text-sm bg-gray-50 border border-transparent focus:border-[#00564C] focus:bg-white rounded-lg outline-none transition';
+
 const ClientOnboarding = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Step 1: Company Information
   const [companyInfo, setCompanyInfo] = useState({
     companyName: '',
     companyWebsite: '',
@@ -20,7 +22,6 @@ const ClientOnboarding = () => {
     linkedIn: ''
   });
 
-  // Step 2: Hiring Preferences
   const [hiringPreferences, setHiringPreferences] = useState({
     lookingFor: '',
     budgetRange: '',
@@ -29,7 +30,6 @@ const ClientOnboarding = () => {
     location: ''
   });
 
-  // Step 3: Profile Photo
   const [profileImage, setProfileImage] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
 
@@ -43,14 +43,12 @@ const ClientOnboarding = () => {
       if (response.data.profileCompleted) {
         navigate('/client/feed');
       }
-    } catch (error) {
-      console.error('Failed to check profile status');
+    } catch {
+      // silent
     }
   };
 
-  const handleSkip = () => {
-    navigate('/client/feed');
-  };
+  const handleSkip = () => navigate('/client/feed');
 
   const handleStep1Submit = async () => {
     if (!companyInfo.companyName) {
@@ -65,21 +63,18 @@ const ClientOnboarding = () => {
 
     setLoading(true);
     try {
-      // Update company info in profile
       await api.put('/profile/update', {
         companyName: companyInfo.companyName,
         companyWebsite: companyInfo.companyWebsite,
         industry: companyInfo.industry
       });
 
-      // Update LinkedIn in social links if provided
       if (companyInfo.linkedIn) {
         await api.put('/onboarding/social-links', {
           linkedin: companyInfo.linkedIn
         });
       }
 
-      toast.success('Company information saved!');
       setCurrentStep(2);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save');
@@ -97,7 +92,6 @@ const ClientOnboarding = () => {
     setLoading(true);
     try {
       await api.put('/onboarding/hiring-preferences', hiringPreferences);
-      toast.success('Hiring preferences saved!');
       setCurrentStep(3);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save');
@@ -120,12 +114,11 @@ const ClientOnboarding = () => {
         await api.put('/profile/update', formData);
       }
 
-      // Complete onboarding
       await api.post('/onboarding/complete');
-      toast.success('🎉 Profile completed! Welcome to Afro Task!');
+      toast.success('Profile complete!');
       setTimeout(() => {
         navigate('/client/feed');
-      }, 2000);
+      }, 1200);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to complete onboarding');
     } finally {
@@ -141,132 +134,116 @@ const ClientOnboarding = () => {
     }
   };
 
-  const getProgress = () => {
-    return (currentStep / 3) * 100;
-  };
+  const getProgress = () => (currentStep / 3) * 100;
+
+  const STEPS = [
+    { num: 1, icon: Building, label: 'Company' },
+    { num: 2, icon: Target, label: 'Preferences' },
+    { num: 3, icon: Camera, label: 'Photo' }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Complete Your Hiring Profile
-          </h1>
-          <p className="text-gray-600">
-            Let's set up your profile to start hiring talent
-          </p>
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Complete your hiring profile</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Step {currentStep} of 3</p>
+          </div>
           <button
             onClick={handleSkip}
-            className="mt-3 text-sm text-gray-400 hover:text-gray-600 underline transition"
+            className="text-sm text-gray-400 hover:text-gray-600 font-medium transition"
           >
             Skip for now
           </button>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Step {currentStep} of 3</span>
-            <span className="text-sm font-medium text-yellow-600">{Math.round(getProgress())}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <motion.div
-              className="bg-gradient-to-r from-yellow-500 to-orange-600 h-3 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${getProgress()}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-        </div>
-
-        {/* Step Indicators */}
-        <div className="flex justify-between mb-8">
-          {[
-            { num: 1, icon: Building, label: 'Company' },
-            { num: 2, icon: Target, label: 'Preferences' },
-            { num: 3, icon: Camera, label: 'Photo' }
-          ].map((step) => (
-            <div key={step.num} className="flex flex-col items-center">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                currentStep >= step.num
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-gray-200 text-gray-500'
-              }`}>
-                {currentStep > step.num ? (
-                  <CheckCircle className="w-6 h-6" />
-                ) : (
-                  <step.icon className="w-6 h-6" />
-                )}
+        <div className="flex items-center gap-2 mb-8">
+          {STEPS.map((step, i) => (
+            <div key={step.num} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center gap-1.5">
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                    currentStep > step.num
+                      ? 'bg-[#00564C] text-white'
+                      : currentStep === step.num
+                      ? 'bg-[#E6F0EF] text-[#00564C] border-2 border-[#00564C]'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  {currentStep > step.num ? <CheckCircle className="w-4 h-4" /> : <step.icon className="w-4 h-4" />}
+                </div>
+                <span className={`text-[11px] font-medium ${currentStep >= step.num ? 'text-gray-700' : 'text-gray-400'}`}>
+                  {step.label}
+                </span>
               </div>
-              <span className="text-xs mt-2 text-gray-600">{step.label}</span>
+              {i < STEPS.length - 1 && (
+                <div
+                  className={`flex-1 h-0.5 mx-2 rounded-full transition-colors ${
+                    currentStep > step.num ? 'bg-[#00564C]' : 'bg-gray-200'
+                  }`}
+                />
+              )}
             </div>
           ))}
         </div>
 
-        {/* Form Steps */}
         <motion.div
-          className="bg-white rounded-2xl shadow-xl p-8"
+          className="bg-white border border-gray-100 rounded-2xl p-6 sm:p-8"
           key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
+          exit={{ opacity: 0, x: -12 }}
+          transition={{ duration: 0.2 }}
         >
-          {/* Step 1: Company Information */}
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Company Information</h2>
-              
+            <div className="space-y-5">
+              <h2 className="text-base font-semibold text-gray-900">Company information</h2>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
                   Company Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={companyInfo.companyName}
-                  onChange={(e) => setCompanyInfo({...companyInfo, companyName: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, companyName: e.target.value })}
+                  className={inputClass}
                   placeholder="Your Company Name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Company Website
-                </label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Company Website</label>
                 <input
                   type="url"
                   value={companyInfo.companyWebsite}
-                  onChange={(e) => setCompanyInfo({...companyInfo, companyWebsite: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, companyWebsite: e.target.value })}
+                  className={inputClass}
                   placeholder="https://yourcompany.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
                   LinkedIn Profile {!companyInfo.companyWebsite && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="url"
                   value={companyInfo.linkedIn}
-                  onChange={(e) => setCompanyInfo({...companyInfo, linkedIn: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, linkedIn: e.target.value })}
+                  className={inputClass}
                   placeholder="https://linkedin.com/company/yourcompany"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Required if no company website provided
-                </p>
+                <p className="text-xs text-gray-400 mt-1">Required if no company website provided</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Industry
-                </label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Industry</label>
                 <select
                   value={companyInfo.industry}
-                  onChange={(e) => setCompanyInfo({...companyInfo, industry: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, industry: e.target.value })}
+                  className={inputClass}
                 >
                   <option value="">Select Industry</option>
                   <option value="Technology">Technology</option>
@@ -285,40 +262,38 @@ const ClientOnboarding = () => {
               <button
                 onClick={handleStep1Submit}
                 disabled={loading}
-                className="w-full px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full mt-2 px-6 py-2.5 bg-[#00564C] hover:bg-[#003F38] text-white text-sm rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 transition"
               >
-                {loading ? 'Saving...' : 'Next Step'}
-                <ArrowRight className="w-5 h-5" />
+                {loading ? 'Saving...' : 'Continue'} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          {/* Step 2: Hiring Preferences */}
           {currentStep === 2 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Hiring Preferences</h2>
-              
+            <div className="space-y-5">
+              <h2 className="text-base font-semibold text-gray-900">Hiring preferences</h2>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
                   What type of freelancer are you looking for? <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={hiringPreferences.lookingFor}
-                  onChange={(e) => setHiringPreferences({...hiringPreferences, lookingFor: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setHiringPreferences({ ...hiringPreferences, lookingFor: e.target.value })}
+                  className={inputClass}
                   placeholder="e.g., Full Stack Developers, Graphic Designers"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
                   Budget Range <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={hiringPreferences.budgetRange}
-                  onChange={(e) => setHiringPreferences({...hiringPreferences, budgetRange: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setHiringPreferences({ ...hiringPreferences, budgetRange: e.target.value })}
+                  className={inputClass}
                 >
                   <option value="">Select Budget Range</option>
                   <option value="$500-$1,000">$500 - $1,000</option>
@@ -329,13 +304,11 @@ const ClientOnboarding = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preferred Experience Level
-                </label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Preferred Experience Level</label>
                 <select
                   value={hiringPreferences.experienceLevel}
-                  onChange={(e) => setHiringPreferences({...hiringPreferences, experienceLevel: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setHiringPreferences({ ...hiringPreferences, experienceLevel: e.target.value })}
+                  className={inputClass}
                 >
                   <option value="">Select Experience Level</option>
                   <option value="Entry Level">Entry Level (0-2 years)</option>
@@ -346,13 +319,11 @@ const ClientOnboarding = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Duration
-                </label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Project Duration</label>
                 <select
                   value={hiringPreferences.projectDuration}
-                  onChange={(e) => setHiringPreferences({...hiringPreferences, projectDuration: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setHiringPreferences({ ...hiringPreferences, projectDuration: e.target.value })}
+                  className={inputClass}
                 >
                   <option value="">Select Duration</option>
                   <option value="Short-term">Short-term (Less than 1 month)</option>
@@ -363,13 +334,11 @@ const ClientOnboarding = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location Preference
-                </label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Location Preference</label>
                 <select
                   value={hiringPreferences.location}
-                  onChange={(e) => setHiringPreferences({...hiringPreferences, location: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  onChange={(e) => setHiringPreferences({ ...hiringPreferences, location: e.target.value })}
+                  className={inputClass}
                 >
                   <option value="">Select Location</option>
                   <option value="Remote Only">Remote Only</option>
@@ -379,40 +348,37 @@ const ClientOnboarding = () => {
                 </select>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setCurrentStep(1)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-2.5 border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-5 h-5" />
-                  Back
+                  <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button
                   onClick={handleStep2Submit}
                   disabled={loading}
-                  className="flex-1 px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-2.5 bg-[#00564C] hover:bg-[#003F38] text-white text-sm rounded-lg disabled:opacity-50 transition flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Saving...' : 'Next Step'}
-                  <ArrowRight className="w-5 h-5" />
+                  {loading ? 'Saving...' : 'Continue'} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step 3: Profile Photo */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Profile Photo</h2>
-              
-              <div className="flex flex-col items-center gap-6">
+              <h2 className="text-base font-semibold text-gray-900">Profile photo</h2>
+
+              <div className="flex flex-col items-center gap-3 py-4">
                 <div className="relative">
                   <img
-                    src={profileImagePreview || user?.profileImage || `https://ui-avatars.com/api/?name=${user?.fullName}`}
+                    src={profileImagePreview || user?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}`}
                     alt="Profile"
-                    className="w-40 h-40 rounded-full object-cover border-4 border-yellow-200"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-[#E6F0EF]"
                   />
-                  <label className="absolute bottom-0 right-0 p-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-full cursor-pointer transition">
-                    <Camera className="w-6 h-6" />
+                  <label className="absolute bottom-0 right-0 p-2.5 bg-[#00564C] hover:bg-[#003F38] text-white rounded-full cursor-pointer transition shadow-sm">
+                    <Camera className="w-4 h-4" />
                     <input
                       type="file"
                       accept="image/*"
@@ -421,36 +387,24 @@ const ClientOnboarding = () => {
                     />
                   </label>
                 </div>
-                <p className="text-sm text-gray-600 text-center">
-                  Upload a professional photo.<br />
-                  This will be visible to freelancers.
+                <p className="text-xs text-gray-400 text-center">
+                  Upload a professional photo — visible to freelancers
                 </p>
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setCurrentStep(2)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-2.5 border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-5 h-5" />
-                  Back
+                  <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button
                   onClick={handleStep3Submit}
                   disabled={loading}
-                  className="flex-1 px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-2.5 bg-[#00564C] hover:bg-[#003F38] text-white text-sm rounded-lg disabled:opacity-50 transition flex items-center justify-center gap-2"
                 >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Completing...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-5 h-5" />
-                      Complete Profile
-                    </>
-                  )}
+                  {loading ? 'Finishing...' : 'Complete profile'} <CheckCircle className="w-4 h-4" />
                 </button>
               </div>
             </div>

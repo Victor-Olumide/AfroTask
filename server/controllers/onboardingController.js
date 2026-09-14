@@ -10,6 +10,7 @@ const calculateProfileCompletion = (user) => {
       'bio',
       'skills',
       'socialLinks',
+      // 'introVideoUrl',
       'profileImage'
     ],
     client: [
@@ -40,8 +41,7 @@ const calculateProfileCompletion = (user) => {
 // Determine profile strength
 const getProfileStrength = (percentage, hasVideo, verified) => {
   if (percentage === 100 && hasVideo && verified) return 'elite';
-  if (percentage === 100 && verified) return 'professional';
-  if (percentage === 100) return 'complete';
+  if (percentage >= 80 && hasVideo) return 'professional';
   return 'basic';
 };
 
@@ -59,7 +59,7 @@ export const getProfileStatus = async (req, res) => {
     const percentage = calculateProfileCompletion(userData);
     const strength = getProfileStrength(
       percentage,
-      !!userData.introVideoUrl,
+      // !!userData.introVideoUrl,
       !!userData.verified
     );
 
@@ -86,6 +86,7 @@ const getMissingFields = (user) => {
     if (!user.bio || user.bio.length < 150) missing.push('Bio (min 150 characters)');
     if (!user.skills || user.skills.length === 0) missing.push('Skills');
     if (!user.socialLinks || !user.socialLinks.linkedin) missing.push('LinkedIn Profile');
+    // if (!user.introVideoUrl) missing.push('Introduction Video');
     if (!user.profileImage) missing.push('Profile Photo');
   } else if (user.role === 'client') {
     if (!user.companyName) missing.push('Company Name');
@@ -225,51 +226,51 @@ export const updateSocialLinks = async (req, res) => {
   }
 };
 
-// Upload intro video (optional — no longer required for onboarding completion)
-export const uploadIntroVideo = async (req, res) => {
-  try {
-    const userId = req.user.userId;
+// Upload intro video (Step 5)
+// export const uploadIntroVideo = async (req, res) => {
+//   try {
+//     const userId = req.user.userId;
 
-    if (!req.file) {
-      return res.status(400).json({ message: 'Please upload a video' });
-    }
+//     if (!req.file) {
+//       return res.status(400).json({ message: 'Please upload a video' });
+//     }
 
-    // Upload to Cloudinary
-    const videoUrl = await uploadToCloudinary(
-      req.file.buffer,
-      'afro-task/intro-videos',
-      'video'
-    );
+//     // Upload to Cloudinary
+//     const videoUrl = await uploadToCloudinary(
+//       req.file.buffer,
+//       'afro-task/intro-videos',
+//       'video'
+//     );
 
-    await db.collection('users').doc(userId).update({
-      introVideoUrl: videoUrl,
-      updatedAt: new Date().toISOString()
-    });
+//     await db.collection('users').doc(userId).update({
+//       introVideoUrl: videoUrl,
+//       updatedAt: new Date().toISOString()
+//     });
 
-    // Recalculate completion
-    const userDoc = await db.collection('users').doc(userId).get();
-    const userData = userDoc.data();
-    const percentage = calculateProfileCompletion(userData);
-    const strength = getProfileStrength(percentage, true, userData.verified);
+//     // Recalculate completion
+//     const userDoc = await db.collection('users').doc(userId).get();
+//     const userData = userDoc.data();
+//     const percentage = calculateProfileCompletion(userData);
+//     const strength = getProfileStrength(percentage, true, userData.verified);
 
-    await db.collection('users').doc(userId).update({
-      profileCompletionPercentage: percentage,
-      profileStrength: strength,
-      profileCompleted: percentage === 100
-    });
+//     await db.collection('users').doc(userId).update({
+//       profileCompletionPercentage: percentage,
+//       profileStrength: strength,
+//       profileCompleted: percentage === 100
+//     });
 
-    res.json({
-      success: true,
-      message: 'Introduction video uploaded',
-      videoUrl,
-      profileCompletionPercentage: percentage,
-      profileCompleted: percentage === 100
-    });
-  } catch (error) {
-    console.error('Upload intro video error:', error);
-    res.status(500).json({ message: 'Failed to upload video' });
-  }
-};
+//     res.json({
+//       success: true,
+//       message: 'Introduction video uploaded',
+//       videoUrl,
+//       profileCompletionPercentage: percentage,
+//       profileCompleted: percentage === 100
+//     });
+//   } catch (error) {
+//     console.error('Upload intro video error:', error);
+//     res.status(500).json({ message: 'Failed to upload video' });
+//   }
+// };
 
 // Update client hiring preferences
 export const updateHiringPreferences = async (req, res) => {
@@ -336,7 +337,7 @@ export const completeOnboarding = async (req, res) => {
 
     const strength = getProfileStrength(
       percentage,
-      !!userData.introVideoUrl,
+      // !!userData.introVideoUrl,
       !!userData.verified
     );
 

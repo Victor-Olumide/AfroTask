@@ -322,7 +322,7 @@ const updateTaskStatus = async (req, res) => {
   try {
     const { projectId } = req.params;
     const { taskStatus } = req.body;
-    const userId = req.user.uid;
+    const userId = req.user.userId;
 
     const validStatuses = ['not_started', 'in_progress', 'finished'];
     if (!validStatuses.includes(taskStatus)) {

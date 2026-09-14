@@ -53,7 +53,6 @@ const MyJobs = () => {
       if (action === "start-chat") {
         await api.post(`/applications/${applicationId}/start-chat`);
         toast.success("Chat started successfully!");
-        // Navigate to pre-project chat
         navigate(`/pre-project-chat/${applicationId}`);
       } else if (action === "reject") {
         await api.post(`/applications/${applicationId}/reject`, {
@@ -76,7 +75,6 @@ const MyJobs = () => {
       return;
     }
 
-    // Open CV in new tab for download
     const link = document.createElement("a");
     link.href = cvUrl;
     link.target = "_blank";
@@ -124,7 +122,6 @@ const MyJobs = () => {
       setNewComment((prev) => ({ ...prev, [jobId]: "" }));
       toast.success("Comment posted!");
 
-      // Update job comment count
       setJobs((prev) =>
         prev.map((job) =>
           job.id === jobId
@@ -184,7 +181,7 @@ const MyJobs = () => {
               </div>
               <button
                 onClick={() => navigate("/client/post-job")}
-                className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg font-medium transition shadow-lg"
+                className="px-6 py-3 bg-[#00564C] hover:bg-[#003F38] text-white rounded-lg font-medium transition shadow-lg"
               >
                 + Post New Job
               </button>
@@ -206,9 +203,9 @@ const MyJobs = () => {
               </div>
             ) : jobs.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-24 h-24 bg-[#E6F0EF] rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
-                    className="w-12 h-12 text-yellow-600"
+                    className="w-12 h-12 text-[#00564C]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -229,7 +226,7 @@ const MyJobs = () => {
                 </p>
                 <button
                   onClick={() => navigate("/client/post-job")}
-                  className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg font-medium transition"
+                  className="px-8 py-3 bg-[#00564C] hover:bg-[#003F38] text-white rounded-lg font-medium transition"
                 >
                   Post Your First Job
                 </button>
@@ -244,20 +241,18 @@ const MyJobs = () => {
                     className={`${dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all border`}
                   >
                     <div className="flex flex-col md:flex-row md:items-start gap-4">
-                      {/* Job Icon */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-16 h-16 bg-[#00564C] rounded-xl flex items-center justify-center flex-shrink-0">
                         <img
                           src={
                             job.client?.profileImage ||
                             user?.profileImage ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(job.client?.fullName || user?.fullName || "Client")}&background=eab308&color=fff`
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(job.client?.fullName || user?.fullName || "Client")}&background=00564C&color=fff`
                           }
                           alt={job.client?.fullName || user?.fullName || "Client"}
                           className="w-full h-full rounded-xl object-cover"
                         />
                       </div>
 
-                      {/* Job Details */}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
                           <div className="flex-1">
@@ -301,7 +296,7 @@ const MyJobs = () => {
                           </div>
                           {(job.budgetRange || job.budget) && (
                             <div className="text-left md:text-right">
-                              <p className="text-xl md:text-2xl font-bold text-yellow-600">
+                              <p className="text-xl md:text-2xl font-bold text-[#00564C]">
                                 {job.budgetRange ||
                                   `$${job.budget?.toLocaleString()}`}
                               </p>
@@ -320,7 +315,6 @@ const MyJobs = () => {
                           </p>
                         )}
 
-                        {/* Skills */}
                         {((job.requiredSkills &&
                           job.requiredSkills.length > 0) ||
                           (job.skills && job.skills.length > 0)) && (
@@ -341,7 +335,6 @@ const MyJobs = () => {
                           </div>
                         )}
 
-                        {/* Stats and Actions */}
                         <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t ${dark ? 'border-gray-700' : 'border-gray-100'}`}>
                           <div className={`flex items-center gap-4 text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
                             <div className="flex items-center gap-1">
@@ -386,7 +379,7 @@ const MyJobs = () => {
                             </div>
                             <button
                               onClick={() => toggleComments(job.id)}
-                              className="flex items-center gap-1 hover:text-blue-600 transition"
+                              className="flex items-center gap-1 hover:text-[#00564C] transition"
                             >
                               <MessageCircle className="w-5 h-5" />
                               <span>{job.commentsCount || 0} Comments</span>
@@ -394,16 +387,14 @@ const MyJobs = () => {
                           </div>
                           <button
                             onClick={() => viewApplicants(job)}
-                            className="px-6 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition"
+                            className="px-6 py-2.5 bg-[#00564C] hover:bg-[#003F38] text-white rounded-lg font-medium transition"
                           >
                             View Applicants
                           </button>
                         </div>
 
-                        {/* Comments Section */}
                         {showComments[job.id] && (
                           <div className={`mt-4 pt-4 border-t ${dark ? 'border-gray-700' : 'border-gray-200'}`}>
-                            {/* Add Comment */}
                             <div className="flex items-start gap-3 mb-4">
                               <img
                                 src={
@@ -428,18 +419,17 @@ const MyJobs = () => {
                                     e.key === "Enter" &&
                                     handleAddComment(job.id)
                                   }
-                                  className={`flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 ${dark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
+                                  className={`flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#00564C] ${dark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
                                 />
                                 <button
                                   onClick={() => handleAddComment(job.id)}
-                                  className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-full transition"
+                                  className="p-2 bg-[#00564C] hover:bg-[#003F38] text-white rounded-full transition"
                                 >
                                   <Send className="w-5 h-5" />
                                 </button>
                               </div>
                             </div>
 
-                            {/* Comments List */}
                             <div className="space-y-3">
                               {comments[job.id]?.length === 0 && (
                                 <p className={`text-center py-4 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -500,7 +490,6 @@ const MyJobs = () => {
         </div>
       </div>
 
-      {/* Applicants Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
@@ -559,7 +548,7 @@ const MyJobs = () => {
                         <p className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>{app.freelancer?.skillCategory}</p>
                         <p className={`mt-3 text-sm md:text-base ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{app.proposalMessage}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                          <span className="font-medium text-green-600">
+                          <span className="font-medium text-[#00564C]">
                             Budget: {app.proposedBudget}
                           </span>
                           {app.portfolioLink && (
@@ -611,7 +600,7 @@ const MyJobs = () => {
                               onClick={() =>
                                 navigate(`/pre-project-chat/${app.id}`)
                               }
-                              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition text-sm"
+                              className="px-4 py-2 bg-[#00564C] hover:bg-[#003F38] text-white rounded-lg transition text-sm"
                             >
                               Continue Chat
                             </button>

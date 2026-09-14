@@ -1,35 +1,50 @@
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, RefreshCw } from 'lucide-react';
+import { ArrowUp, Briefcase, Users, FolderCheck, PlusCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/navbar/Navbar';
 import Sidebar from '../components/Sidebar';
-import EnhancedPostCard from '../components/EnhancedPostCard';
-import ProfileCompletionWidget from '../components/ProfileCompletionWidget';
+import FeedHeader from '../components/FeedHeader';
+import ProfileCompletionCompact from '../components/ProfileCompletionCompact';
+import CodePostCard from '../components/CodePostCard';
+import JobAnnouncementCard from '../components/JobAnnouncementCard';
 import { useNavigate } from 'react-router-dom';
 
 const LIMIT = 10;
-const POLL_INTERVAL = 45000; // 45 seconds
+const POLL_INTERVAL = 45000;
+
+const StatCard = ({ icon: Icon, label, value }) => (
+  <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3">
+    <div className="w-10 h-10 rounded-xl bg-[#E6F0EF] flex items-center justify-center shrink-0">
+      <Icon className="w-5 h-5 text-[#00564C]" />
+    </div>
+    <div className="min-w-0">
+      <p className="text-lg font-bold text-gray-900 leading-none">{value}</p>
+      <p className="text-xs text-gray-500 mt-1 truncate">{label}</p>
+    </div>
+  </div>
+);
 
 const ClientFeed = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const [activeTab, setActiveTab] = useState('feed');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // "New posts available" banner
   const [newPostsCount, setNewPostsCount] = useState(0);
   const latestPostIdRef = useRef(null);
   const pollTimerRef = useRef(null);
 
-  const [stats, setStats] = useState({ activeJobs: 0, applicants: 0 });
+  const [stats, setStats] = useState({ activeJobs: 0, applicants: 0, projectsToApprove: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
@@ -39,14 +54,26 @@ const ClientFeed = () => {
     return () => clearInterval(pollTimerRef.current);
   }, []);
 
-  // ─── Feed loader ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    loadFeed(1, true);
+  }, [activeTab, searchQuery]);
+
+  const buildQuery = (pageNum) => {
+    let q = `page=${pageNum}&limit=${LIMIT}`;
+    if (searchQuery) q += `&search=${encodeURIComponent(searchQuery)}`;
+    if (activeTab === 'jobs') q += `&status=open`;
+    return q;
+  };
+
+  const endpointForTab = () => (activeTab === 'jobs' ? '/jobs' : '/posts/feed');
+
   const loadFeed = async (pageNum = 1, reset = false) => {
     try {
       if (reset) setLoading(true);
       else setLoadingMore(true);
 
-      const res = await api.get(`/posts/feed?page=${pageNum}&limit=${LIMIT}`);
-      const incoming = res.data.posts || [];
+      const res = await api.get(`${endpointForTab()}?${buildQuery(pageNum)}`);
+      const incoming = res.data.posts || res.data.jobs || [];
 
       if (reset) {
         setPosts(incoming);
@@ -68,7 +95,6 @@ const ClientFeed = () => {
     }
   };
 
-  // ─── Background polling ───────────────────────────────────────────────────────
   const startPolling = useCallback(() => {
     clearInterval(pollTimerRef.current);
     pollTimerRef.current = setInterval(async () => {
@@ -93,7 +119,6 @@ const ClientFeed = () => {
     if (!loadingMore && hasMore) loadFeed(page + 1);
   };
 
-  // ─── Stats & activity ─────────────────────────────────────────────────────────
   const fetchStats = async () => {
     if (!user?.id) return;
     try {
@@ -103,7 +128,7 @@ const ClientFeed = () => {
       ]);
       const activeJobs = jobsRes.data.jobs?.filter(j => j.status === 'open').length || 0;
       const totalApplicants = jobsRes.data.jobs?.reduce((s, j) => s + (j.applicantsCount || 0), 0) || 0;
-      setStats({ activeJobs, applicants: totalApplicants });
+      setStats({ activeJobs, applicants: totalApplicants, projectsToApprove: 0 });
     } catch {
       // silent
     }
@@ -118,17 +143,12 @@ const ClientFeed = () => {
     }
   };
 
-  const handleDeletePost = (postId) => {
-    setPosts(prev => prev.filter(p => p.id !== postId));
-  };
-
-  // ─── Skeleton ────────────────────────────────────────────────────────────────
   const Skeleton = () => (
     <div className="space-y-6">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl p-6 animate-pulse">
+        <div key={i} className="bg-white border border-gray-100 rounded-2xl p-6 animate-pulse">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-gray-200 rounded-full" />
+            <div className="w-10 h-10 bg-gray-200 rounded-full" />
             <div className="flex-1">
               <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
               <div className="h-3 bg-gray-200 rounded w-1/4" />
@@ -153,66 +173,82 @@ const ClientFeed = () => {
 
         <div className="lg:p-8 p-4">
           <div className="max-w-7xl mx-auto">
-            {/* Welcome */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
+              className="mb-6"
             >
               <h1 className="lg:text-3xl md:text-2xl text-xl font-bold text-gray-900 mb-2">
                 Good day, {user?.fullName?.split(' ')[0]} 👋
               </h1>
-              <p className="text-gray-600 lg:text-lg text-xs">
+              <p className="text-gray-500 lg:text-base text-xs">
                 Here's what's happening with your projects today
               </p>
             </motion.div>
 
-            <ProfileCompletionWidget userRole="client" />
+            <ProfileCompletionCompact userRole="client" />
 
-            {/* Main grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <StatCard icon={Briefcase} label="Active jobs" value={stats.activeJobs} />
+              <StatCard icon={Users} label="Applicants to review" value={stats.applicants} />
+              <StatCard icon={FolderCheck} label="Projects to approve" value={stats.projectsToApprove} />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Feed */}
               <div className="lg:col-span-2">
-                <div className="flex items-center justify-between mb-6 px-6 lg:px-0">
-                  <h2 className="text-2xl font-bold text-gray-900">Activity Feed</h2>
-                  <button
-                    onClick={() => loadFeed(1, true)}
-                    disabled={loading}
-                    className="flex items-center gap-1.5 text-sm text-yellow-600 hover:text-yellow-700 font-medium disabled:opacity-50 transition"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </button>
+                <div className="bg-white rounded-t-2xl border border-gray-100 overflow-hidden">
+                  <FeedHeader
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    onRefresh={() => loadFeed(1, true)}
+                    refreshing={loading}
+                    searchValue={searchQuery}
+                    onSearchChange={setSearchQuery}
+                  />
                 </div>
 
-                {/* New posts banner removed — now a floating portal pill below */}
-
-                <div className="md:mx-12 lg:mx-0">
+                <div className="mt-6">
                   {loading ? (
                     <Skeleton />
                   ) : (
                     <>
                       <div className="space-y-6">
-                        {posts.map(post => (
-                          <EnhancedPostCard
-                            key={post.id}
-                            post={post}
-                            onDelete={handleDeletePost}
-                          />
-                        ))}
-                        {posts.length === 0 && (
-                          <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
-                            <p className="text-gray-500 text-lg">No posts yet. Start following freelancers!</p>
-                          </div>
+                        {posts.map(post =>
+                          post.type === 'job' || activeTab === 'jobs' ? (
+                            <JobAnnouncementCard
+                              key={post.id}
+                              job={post.job || post}
+                              onView={() => navigate(`/client/jobs`)}
+                            />
+                          ) : (
+                            <CodePostCard
+                              key={post.id}
+                              post={post}
+                              currentUserId={user?.id || user?.uid}
+                              onLike={(id) => api.post(`/posts/${id}/like`)}
+                              onComment={(id) => navigate(`/client/feed`)}
+                              onRepost={(id) => api.post(`/posts/${id}/repost`)}
+                              onBookmark={(id) => api.post(`/posts/${id}/bookmark`)}
+                              onShare={(id) =>
+                                navigator.share?.({ url: `${window.location.origin}/posts/${id}` })
+                              }
+                            />
+                          )
                         )}
                       </div>
+
+                      {posts.length === 0 && (
+                        <div className="text-center py-12 bg-white border border-gray-100 rounded-2xl">
+                          <p className="text-gray-500">No posts yet. Start following freelancers!</p>
+                        </div>
+                      )}
 
                       {posts.length > 0 && hasMore && (
                         <div className="mt-8 text-center">
                           <button
                             onClick={handleLoadMore}
                             disabled={loadingMore}
-                            className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white rounded-xl font-medium transition disabled:opacity-50 shadow-lg"
+                            className="px-8 py-2.5 bg-[#00564C] hover:bg-[#003F38] text-white rounded-xl font-medium text-sm transition disabled:opacity-50"
                           >
                             {loadingMore ? 'Loading...' : 'Load More'}
                           </button>
@@ -227,71 +263,52 @@ const ClientFeed = () => {
                 </div>
               </div>
 
-              {/* Sidebar */}
               <div className="lg:col-span-1 space-y-6">
-                {/* Recent Activity */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="bg-white border border-gray-100 rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+                    <h3 className="text-sm font-bold text-gray-900">Recent Activity</h3>
                     <button
                       onClick={() => navigate('/client/jobs')}
-                      className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+                      className="text-xs text-[#00564C] hover:text-[#003F38] font-medium"
                     >
                       See all
                     </button>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {recentActivity.map((job, index) => (
-                      <div key={index} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{job.title}</p>
-                          <p className="text-xs text-gray-500">{job.applicantsCount || 0} applicants</p>
+                      <div key={index} className="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+                        <div className="w-1.5 h-1.5 bg-[#00564C] rounded-full mt-1.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{job.title}</p>
+                          <p className="text-xs text-gray-400">{job.applicantsCount || 0} applicants</p>
                         </div>
                       </div>
                     ))}
                     {recentActivity.length === 0 && (
-                      <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
+                      <p className="text-sm text-gray-400 text-center py-4">No recent activity</p>
                     )}
                   </div>
                 </div>
 
-                {/* Pending Requests */}
-                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-100">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Pending Requests</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Applications to review</span>
-                      <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full">
-                        {stats.applicants}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Projects to approve</span>
-                      <span className="px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">0</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-                  <div className="space-y-3">
+                <div className="bg-white border border-gray-100 rounded-2xl p-5">
+                  <h3 className="text-sm font-bold text-gray-900 mb-3">Quick Actions</h3>
+                  <div className="space-y-2">
                     <button
                       onClick={() => navigate('/client/post-job')}
-                      className="w-full px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition text-sm"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00564C] hover:bg-[#003F38] text-white rounded-lg font-medium transition text-sm"
                     >
+                      <PlusCircle className="w-4 h-4" />
                       Post New Job
                     </button>
                     <button
                       onClick={() => navigate('/client/jobs')}
-                      className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition text-sm"
+                      className="w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-medium transition text-sm"
                     >
                       View Applications
                     </button>
                     <button
                       onClick={() => navigate('/client/projects/ongoing')}
-                      className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition text-sm"
+                      className="w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-medium transition text-sm"
                     >
                       Manage Projects
                     </button>
@@ -304,7 +321,6 @@ const ClientFeed = () => {
       </div>
     </div>
 
-    {/* Floating "new posts" pill — fixed top-center like Twitter */}
     {createPortal(
       <AnimatePresence>
         {newPostsCount > 0 && (

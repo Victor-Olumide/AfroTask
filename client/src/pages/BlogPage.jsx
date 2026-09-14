@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { X, ArrowLeft } from 'lucide-react'
+import { X, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react'
 
 import { AuthContext } from '../context/AuthContext'
 import api from '../services/api'
@@ -25,7 +25,8 @@ function Toast({ message, type = 'success', onClose }) {
   return (
     <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl text-white text-sm font-medium transition-all
       ${type === 'success' ? 'bg-[#00564C]' : 'bg-red-600'}`}>
-      {type === 'success' ? '✅' : '❌'} {message}
+      {type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
+      {message}
       <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">
         <X className="w-4 h-4" />
       </button>
@@ -49,31 +50,25 @@ export default function BlogPage() {
   const { blogId } = useParams()
   const navigate = useNavigate()
 
-  // data
   const [firestoreBlogs, setFirestoreBlogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentBlog, setCurrentBlog] = useState(null)
 
-  // delete
   const [deleting, setDeleting] = useState(false)
 
-  // edit modal
   const [showEditModal, setShowEditModal] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  // comments
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [loadingComments, setLoadingComments] = useState(false)
 
-  // toast
   const [toast, setToast] = useState(null)
   const showToast = (message, type = 'success') => setToast({ message, type })
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchBlogs = async () => {
     try {
       const res = await api.get('/profile/blogs')
@@ -91,8 +86,7 @@ export default function BlogPage() {
     try {
       const res = await api.get(`/profile/blogs/${blogId}/comments`)
       setComments(res.data.comments || [])
-    } catch (err) {
-      console.error('Failed to fetch comments:', err)
+    } catch {
       setComments([])
     } finally {
       setLoadingComments(false)
@@ -101,7 +95,6 @@ export default function BlogPage() {
 
   useEffect(() => { fetchBlogs() }, [])
 
-  // ── Derived state ──────────────────────────────────────────────────────────
   const allBlogs = useMemo(() => firestoreBlogs.map((b) => ({
     id: b.id,
     title: b.title,
@@ -131,7 +124,6 @@ export default function BlogPage() {
       .slice(0, 3)
   }, [allBlogs, currentBlog])
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!currentBlog?.isFirestore) return
     if (!window.confirm(`Delete "${currentBlog.title}"?`)) return
@@ -139,9 +131,8 @@ export default function BlogPage() {
     try {
       await api.delete(`/profile/blogs/${currentBlog.id}`)
       navigate('/blogs')
-    } catch (err) {
-      console.error(err)
-      alert('Failed to delete blog')
+    } catch {
+      showToast('Failed to delete blog', 'error')
     } finally {
       setDeleting(false)
     }
@@ -187,7 +178,6 @@ export default function BlogPage() {
       setImagePreview(null)
       setShowEditModal(false)
     } catch (err) {
-      console.error('Blog save error:', err.response?.data || err.message)
       showToast(err.response?.data?.message || 'Failed to save blog', 'error')
     } finally {
       setSaving(false)
@@ -207,7 +197,6 @@ export default function BlogPage() {
       setCommentText('')
       await fetchComments()
     } catch (err) {
-      console.error('Failed to add comment:', err)
       showToast(err.response?.data?.message || 'Failed to add comment', 'error')
     }
   }
@@ -219,7 +208,6 @@ export default function BlogPage() {
       showToast('Comment deleted')
       await fetchComments()
     } catch (err) {
-      console.error('Failed to delete comment:', err)
       showToast(err.response?.data?.message || 'Failed to delete comment', 'error')
     }
   }
@@ -236,7 +224,6 @@ export default function BlogPage() {
       showToast('Reply added successfully!')
       await fetchComments()
     } catch (err) {
-      console.error('Failed to add reply:', err)
       showToast(err.response?.data?.message || 'Failed to add reply', 'error')
     }
   }
@@ -248,7 +235,6 @@ export default function BlogPage() {
       showToast('Reply deleted')
       await fetchComments()
     } catch (err) {
-      console.error('Failed to delete reply:', err)
       showToast(err.response?.data?.message || 'Failed to delete reply', 'error')
     }
   }
@@ -263,7 +249,6 @@ export default function BlogPage() {
     }
   }
 
-  // ── Loading / Not Found ────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-[#00564C] flex items-center justify-center p-8">
@@ -298,7 +283,6 @@ export default function BlogPage() {
     )
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen text-black bg-gray-50 relative">
       <WhiteNavbar />
@@ -332,7 +316,6 @@ export default function BlogPage() {
 
         </div>
 
-        {/* Dark section — comments + suggestions */}
         <div className="pt-16 pb-20 px-4 sm:px-8 lg:px-0 mx-auto w-screen bg-[#00564C] text-white">
           <div className="max-w-4xl mx-auto">
 

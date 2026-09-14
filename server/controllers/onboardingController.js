@@ -10,7 +10,6 @@ const calculateProfileCompletion = (user) => {
       'bio',
       'skills',
       'socialLinks',
-      'introVideoUrl',
       'profileImage'
     ],
     client: [
@@ -41,7 +40,8 @@ const calculateProfileCompletion = (user) => {
 // Determine profile strength
 const getProfileStrength = (percentage, hasVideo, verified) => {
   if (percentage === 100 && hasVideo && verified) return 'elite';
-  if (percentage >= 80 && hasVideo) return 'professional';
+  if (percentage === 100 && verified) return 'professional';
+  if (percentage === 100) return 'complete';
   return 'basic';
 };
 
@@ -86,7 +86,6 @@ const getMissingFields = (user) => {
     if (!user.bio || user.bio.length < 150) missing.push('Bio (min 150 characters)');
     if (!user.skills || user.skills.length === 0) missing.push('Skills');
     if (!user.socialLinks || !user.socialLinks.linkedin) missing.push('LinkedIn Profile');
-    if (!user.introVideoUrl) missing.push('Introduction Video');
     if (!user.profileImage) missing.push('Profile Photo');
   } else if (user.role === 'client') {
     if (!user.companyName) missing.push('Company Name');
@@ -226,7 +225,7 @@ export const updateSocialLinks = async (req, res) => {
   }
 };
 
-// Upload intro video (Step 5)
+// Upload intro video (optional — no longer required for onboarding completion)
 export const uploadIntroVideo = async (req, res) => {
   try {
     const userId = req.user.userId;

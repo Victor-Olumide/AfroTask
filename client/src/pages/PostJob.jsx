@@ -49,7 +49,7 @@ const PostJob = () => {
     }
   };
 
-  const inputCls = `w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${
+  const inputCls = `w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00564C] focus:border-transparent ${
     dark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'
   }`;
   const labelCls = `block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`;
@@ -122,16 +122,16 @@ const PostJob = () => {
                     <button
                       type="button"
                       onClick={addSkill}
-                      className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition"
+                      className="px-6 py-3 bg-[#00564C] hover:bg-[#003F38] text-white rounded-lg transition"
                     >
                       Add
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.requiredSkills.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm flex items-center gap-2">
+                      <span key={index} className="px-3 py-1 bg-[#E6F0EF] text-[#00564C] rounded-lg text-sm flex items-center gap-2">
                         {skill}
-                        <button type="button" onClick={() => removeSkill(skill)} className="text-yellow-700 hover:text-yellow-900">×</button>
+                        <button type="button" onClick={() => removeSkill(skill)} className="text-[#00564C] hover:text-[#003F38]">×</button>
                       </span>
                     ))}
                   </div>
@@ -191,7 +191,7 @@ const PostJob = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg transition disabled:opacity-50"
+                    className="flex-1 px-6 py-3 bg-[#00564C] hover:bg-[#003F38] text-white rounded-lg transition disabled:opacity-50"
                   >
                     {loading ? 'Posting...' : 'Post Job'}
                   </button>

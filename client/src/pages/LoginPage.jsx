@@ -47,11 +47,9 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
-  // Unverified email state
   const [unverifiedEmail, setUnverifiedEmail] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  // Forgot password modal
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -59,7 +57,6 @@ const LoginPage = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
 
-  // Handle redirect result (for browsers that block popups)
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
@@ -99,12 +96,10 @@ const LoginPage = () => {
     setLoading(true);
     setUnverifiedEmail(false);
 
-    // In emulator/dev mode skip Firebase verification — go straight to backend
     const usingEmulator = import.meta.env.VITE_USE_EMULATOR === 'true';
 
     try {
       if (!usingEmulator) {
-        // Production: check Firebase email verification
         try {
           const fbResult = await signInWithEmailAndPassword(auth, formData.email, formData.password);
 
@@ -123,14 +118,12 @@ const LoginPage = () => {
             setLoading(false);
             return;
           }
-          // auth/user-not-found = legacy account, fall through to backend
           if (fbErr.code !== 'auth/user-not-found') {
             console.warn('Firebase login note:', fbErr.code, fbErr.message);
           }
         }
       }
 
-      // Backend login — always runs
       const response = await api.post('/auth/login', formData);
       toast.success('Login successful!');
       login(response.data.token, response.data.user);
@@ -160,7 +153,7 @@ const LoginPage = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const { user } = result;
-      await signOut(auth); // sign out Firebase session; app uses custom tokens
+      await signOut(auth);
 
       const response = await api.post('/auth/google', {
         email: user.email,
@@ -170,7 +163,6 @@ const LoginPage = () => {
       });
 
       if (response.data.needsRole) {
-        // User doesn't exist yet — send them to welcome to pick a role
         toast('Please choose your account type to continue.', { icon: 'ℹ️' });
         navigate('/welcome');
         return;
@@ -179,7 +171,7 @@ const LoginPage = () => {
       toast.success('Logged in with Google!');
       login(response.data.token, response.data.user);
     } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user') return; // user dismissed
+      if (err.code === 'auth/popup-closed-by-user') return;
       toast.error('Google sign-in failed. Please try again.');
       console.error('Google login error:', err);
     } finally {
@@ -241,11 +233,10 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Back to home */}
       <div className="p-4">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-green-600 transition font-medium text-sm"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-[#00564C] transition font-medium text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
@@ -254,13 +245,12 @@ const LoginPage = () => {
 
       <div className="flex-1 flex items-center justify-center py-6 px-6 lg:px-12">
         <div className="w-full max-w-6xl flex gap-8 lg:gap-12">
-          {/* Left illustration */}
           <div className="hidden lg:flex lg:w-1/2 items-center justify-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center p-8"
+              className="w-full h-full bg-gradient-to-br from-[#00564C] to-[#00382f] rounded-2xl flex items-center justify-center p-8"
             >
               <img
                 src="/img/fa1.png"
@@ -270,7 +260,6 @@ const LoginPage = () => {
             </motion.div>
           </div>
 
-          {/* Login form */}
           <div className="w-full lg:w-1/2 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -289,7 +278,6 @@ const LoginPage = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email Address
@@ -301,11 +289,10 @@ const LoginPage = () => {
                     onChange={handleChange}
                     required
                     autoComplete="email"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00564C] focus:border-transparent outline-none"
                   />
                 </div>
 
-                {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                   <div className="relative">
@@ -316,7 +303,7 @@ const LoginPage = () => {
                       onChange={handleChange}
                       required
                       autoComplete="current-password"
-                      className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00564C] focus:border-transparent outline-none"
                     />
                     <button
                       type="button"
@@ -328,22 +315,21 @@ const LoginPage = () => {
                   </div>
                 </div>
 
-                {/* Email not verified warning */}
                 <AnimatePresence>
                   {unverifiedEmail && (
                     <motion.div
                       initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
-                      className="bg-yellow-50 border border-yellow-300 rounded-lg p-4"
+                      className="bg-amber-50 border border-amber-300 rounded-lg p-4"
                     >
                       <div className="flex items-start gap-3">
-                        <Mail className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                        <Mail className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm font-semibold text-yellow-800">
+                          <p className="text-sm font-semibold text-amber-800">
                             Email not verified
                           </p>
-                          <p className="text-xs text-yellow-700 mt-1">
+                          <p className="text-xs text-amber-700 mt-1">
                             Please verify your email before logging in. Check your inbox for the
                             verification link.
                           </p>
@@ -351,7 +337,7 @@ const LoginPage = () => {
                             type="button"
                             onClick={handleResendVerification}
                             disabled={resendLoading}
-                            className="text-xs font-semibold text-yellow-800 underline mt-2 hover:text-yellow-900 disabled:opacity-50"
+                            className="text-xs font-semibold text-amber-800 underline mt-2 hover:text-amber-900 disabled:opacity-50"
                           >
                             {resendLoading ? 'Sending...' : 'Resend verification email'}
                           </button>
@@ -361,12 +347,11 @@ const LoginPage = () => {
                   )}
                 </AnimatePresence>
 
-                {/* Forgot password link */}
                 <div className="flex justify-end">
                   <button
                     type="button"
                     onClick={() => setShowForgotModal(true)}
-                    className="text-sm text-green-600 hover:text-green-700 font-medium transition"
+                    className="text-sm text-[#00564C] hover:text-[#003F38] font-medium transition"
                   >
                     Forgot Password?
                   </button>
@@ -375,20 +360,18 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
+                  className="w-full bg-[#00564C] hover:bg-[#003F38] text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
                 >
                   {loading ? 'Logging in...' : 'Log in'}
                 </button>
               </form>
 
-              {/* Divider */}
               <div className="flex items-center gap-3 my-5">
                 <div className="flex-1 h-px bg-gray-200" />
                 <span className="text-xs text-gray-400 font-medium">OR</span>
                 <div className="flex-1 h-px bg-gray-200" />
               </div>
 
-              {/* Google Sign-In */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
@@ -404,7 +387,6 @@ const LoginPage = () => {
                 {googleLoading ? 'Signing in...' : 'Continue with Google'}
               </button>
 
-              {/* Apple Sign-In */}
               <button
                 type="button"
                 onClick={handleAppleLogin}
@@ -421,7 +403,7 @@ const LoginPage = () => {
                 Don't have an account?{' '}
                 <button
                   onClick={() => navigate('/welcome')}
-                  className="text-green-600 hover:text-green-700 font-semibold"
+                  className="text-[#00564C] hover:text-[#003F38] font-semibold"
                 >
                   Sign up
                 </button>
@@ -433,7 +415,6 @@ const LoginPage = () => {
 
       <Footer />
 
-      {/* ── Forgot Password Modal ── */}
       <AnimatePresence>
         {showForgotModal && (
           <motion.div
@@ -459,10 +440,9 @@ const LoginPage = () => {
               </button>
 
               {forgotSent ? (
-                /* Success state */
                 <div className="text-center py-4">
-                  <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Mail className="w-7 h-7 text-green-600" />
+                  <div className="w-14 h-14 bg-[#E6F0EF] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-7 h-7 text-[#00564C]" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-800 mb-2">Check your inbox</h3>
                   <p className="text-gray-600 text-sm mb-1">We sent a password reset link to:</p>
@@ -472,17 +452,16 @@ const LoginPage = () => {
                   </p>
                   <button
                     onClick={closeForgotModal}
-                    className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition"
+                    className="w-full py-3 bg-[#00564C] hover:bg-[#003F38] text-white font-semibold rounded-lg transition"
                   >
                     Back to Login
                   </button>
                 </div>
               ) : (
-                /* Form state */
                 <>
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-5 h-5 text-green-600" />
+                    <div className="w-10 h-10 bg-[#E6F0EF] rounded-full flex items-center justify-center flex-shrink-0">
+                      <Mail className="w-5 h-5 text-[#00564C]" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-800">Reset your password</h3>
@@ -504,7 +483,7 @@ const LoginPage = () => {
                         required
                         placeholder="Enter your registered email"
                         autoFocus
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00564C] focus:border-transparent outline-none"
                       />
                     </div>
                     <div className="flex gap-3 pt-1">
@@ -518,7 +497,7 @@ const LoginPage = () => {
                       <button
                         type="submit"
                         disabled={forgotLoading}
-                        className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition disabled:opacity-50"
+                        className="flex-1 py-3 bg-[#00564C] hover:bg-[#003F38] text-white font-semibold rounded-lg transition disabled:opacity-50"
                       >
                         {forgotLoading ? 'Sending...' : 'Send Reset Link'}
                       </button>

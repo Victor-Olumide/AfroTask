@@ -4,12 +4,6 @@ import { AuthContext } from '../context/AuthContext';
 
 const ProfilePage = () => {
   const { user } = useContext(AuthContext);
-
-  console.log('ProfilePage - Full user object:', user);
-  console.log('ProfilePage - user.id:', user?.id);
-  console.log('ProfilePage - user.uid:', user?.uid);
-  console.log('ProfilePage - All user keys:', user ? Object.keys(user) : 'no user');
-
   // If user is not loaded yet, show loading
   if (!user) {
     return (

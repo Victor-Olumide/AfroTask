@@ -500,16 +500,9 @@ const PublicProfilePage = () => {
       }
 
       <div className="w-screen lg:flex-1 lg:ml-64">
-        {(user?.role === 'client' || user?.role === 'freelancer') && <Navbar />}
+        {/* {(user?.role === 'client' || user?.role === 'freelancer') && <Navbar />} */}
         <div className="py-2 md:p-8">
           <div className="mx-auto">
-            <button
-              onClick={() => navigate(-1)}
-              className={`mb-4 flex items-center gap-2 transition ${dark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
-            </button>
 
             <ProfileHeader
               profile={profile}

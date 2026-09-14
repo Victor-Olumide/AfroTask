@@ -74,9 +74,6 @@ const CreatePost = () => {
       <Sidebar />
 
       <div className="flex-1 lg:ml-64 transition-all duration-300">
-        <div className={`sticky top-0 z-10 backdrop-blur-md border-b px-6 md:px-10 py-4.5 ${dark ? 'bg-gray-900/80 border-gray-800' : 'bg-white/80 border-gray-200/80'}`}>
-          <h2 className={`text-lg font-semibold tracking-tight ${dark ? 'text-white' : 'text-gray-900'}`}>Create Post</h2>
-        </div>
 
         <div className="p-4 md:p-10 max-w-4xl mx-auto">
           <motion.div

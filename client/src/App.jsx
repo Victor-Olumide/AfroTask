@@ -40,7 +40,7 @@ import ProjectWorkspace from './pages/ProjectWorkspace';
 import AppSettingsPage from './pages/AppSettingsPage';
 import AdminProfilePage from './pages/AdminProfilePage';
 import BookmarksPage from './pages/BookmarksPage';
-
+import FreelancerEarnings from "./pages/FreelancerEarnings"
 function App() {
   return (
     <div className='overflow-x-hidden'>
@@ -100,6 +100,11 @@ function App() {
           <Route path="/freelancer/feed" element={
             <PrivateRoute role="freelancer">
               <FreelancerFeed />
+            </PrivateRoute>
+          } />
+          <Route path="/freelancer/earnings" element={
+            <PrivateRoute role="freelancer">
+              <FreelancerEarnings />
             </PrivateRoute>
           } />
           <Route path="/freelancer/jobs" element={

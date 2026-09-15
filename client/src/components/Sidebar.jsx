@@ -47,7 +47,7 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
     { name: 'Create Post', path: '/freelancer/create-post', icon: PlusCircle },
     { name: 'Messages', path: '/freelancer/messages', icon: MessageSquare },
     { name: 'Bookmarks', path: '/freelancer/bookmarks', icon: Bookmark },
-    { name: 'Blog', path: '/blogs', icon: BookOpen },
+    { name: 'Earnings', path: '/freelancer/earnings', icon: Bookmark },
     { name: 'Profile', path: '/freelancer/profile', icon: User }
   ];
 

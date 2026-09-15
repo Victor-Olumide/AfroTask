@@ -7,8 +7,7 @@ import {
   Briefcase,
   ArrowRight,
   Filter,
-  RefreshCw,
-  X
+  RefreshCw
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import api from '../services/api';
@@ -30,8 +29,6 @@ const FreelancerFeed = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Mobile drawer state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('feed');
 
   // Feed & Data states
@@ -184,53 +181,15 @@ const FreelancerFeed = () => {
   return (
     <div className="min-h-screen bg-white text-gray-900 antialiased">
       
-      {/* 1. Desktop Permanent Sidebar */}
-      <div className="hidden lg:block fixed inset-y-0 left-0 w-64 z-30 bg-white border-r border-gray-100">
-        <Sidebar />
-      </div>
+      {/* Sidebar handles its own desktop-persistent + mobile-drawer rendering,
+          including the mobile hamburger trigger. */}
+      <Sidebar />
 
-      {/* 2. Mobile Drawer Sidebar (Explicit Slide-Over Window) */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            {/* Backdrop Blur/Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 bg-black"
-            />
-            {/* Sliding Panel */}
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 flex flex-col"
-            >
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <span className="font-bold text-[#00564C]">Menu</span>
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="p-1 rounded-lg text-gray-500 hover:bg-gray-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <Sidebar onClose={() => setSidebarOpen(false)} />
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 3. Main Body */}
+      {/* Main Body */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
         
         {/* Top Navigation */}
-        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+        <Navbar />
 
         {/* Content Layout */}
         <main className="max-w-6xl w-full mx-auto flex-1 flex flex-col lg:flex-row">

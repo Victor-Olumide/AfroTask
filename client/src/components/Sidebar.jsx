@@ -18,6 +18,14 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
 
+  // Sidebar manages its own mobile-open state by default so it always works,
+  // even on pages that don't wire up isMobileMenuOpen/setIsMobileMenuOpen.
+  // If a parent explicitly passes both props, we defer to them instead.
+  const isControlled = isMobileMenuOpen !== undefined && setIsMobileMenuOpen !== undefined;
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false);
+  const mobileOpen = isControlled ? isMobileMenuOpen : internalMobileOpen;
+  const setMobileOpen = isControlled ? setIsMobileMenuOpen : setInternalMobileOpen;
+
   const isFreelancer = user?.role === 'freelancer';
 
   useEffect(() => {
@@ -62,7 +70,7 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
 
   const handleNavigation = (path) => {
     navigate(path);
-    if (setIsMobileMenuOpen) setIsMobileMenuOpen(false);
+    setMobileOpen(false);
   };
 
   const sidebarInner = (
@@ -81,7 +89,7 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
           <Menu className="w-5 h-5" />
         </button>
         <button
-          onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(false)}
+          onClick={() => setMobileOpen(false)}
           className={`lg:hidden p-2 rounded-lg ${dark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-100 text-gray-700'}`}
         >
           <X className="w-6 h-6" />
@@ -193,15 +201,24 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
         {sidebarInner}
       </div>
 
+      {/* Mobile hamburger trigger — fixed so it stays reachable even after scrolling past the navbar */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open menu"
+        className="lg:hidden fixed top-4 left-4 z-40 p-2.5 rounded-xl bg-[#00564C] hover:bg-[#003F38] text-white shadow-lg ring-1 ring-white/20"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       {/* Mobile Drawer Overlay */}
       <AnimatePresence>
-        {isMobileMenuOpen && (
+        {mobileOpen && (
           <div className="lg:hidden fixed inset-0 z-50 flex">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => setMobileOpen(false)}
               className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
             <motion.div
